@@ -13,12 +13,6 @@ services:
     image: mongo
     environment:
       - MONGO_INITDB_DATABASE=burgerapi
-    volumes:
-      - mongodata:/data/db
     ports:
       - "27017:27017"
     restart: always
-
-volumes:
-  mongodata:
-    driver: local
