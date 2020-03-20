@@ -6,4 +6,4 @@ const app = express();
 
 routes(app);
 
-app.listen(process.env.API_PORT, () => console.log(`API Started on port ${process.env.API_PORT}...`));
+app.listen(process.env.API_PORT, () => console.log(`BurgerAPI Started on port ${process.env.API_PORT}...`));
