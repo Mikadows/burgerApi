@@ -59,7 +59,7 @@ puis écrire :
 Ensuite préparer la BDD:
 ``` 
 mongo
-use trello 
+use burgerApi 
 exit 
 exit 
 ```
