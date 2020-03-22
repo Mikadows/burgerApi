@@ -9,7 +9,7 @@ module.exports = function(app) {
         res.status(501).end();
     });
 
-    app.update('/manage/product/:id', async (req, res) => {
+    app.put('/manage/product/:id', async (req, res) => {
         //TODO : Update product
         res.status(501).end();
     });
@@ -28,7 +28,7 @@ module.exports = function(app) {
         res.status(501).end();
     });
 
-    app.update('/manage/menu/:id', async (req, res) => {
+    app.put('/manage/menu/:id', async (req, res) => {
         //TODO : Update product
         res.status(501).end();
     });
