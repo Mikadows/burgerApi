@@ -8,5 +8,5 @@ const app = express();
 initDbConnection();
 routes(app);
 
-app.listen(process.env.MONGODB_ADDON_PORT, () => console.log(`BurgerAPI Started on port ${process.env.MONGODB_ADDON_PORT}...`));
+app.listen(process.env.API_PORT, () => console.log(`BurgerAPI Started on port ${process.env.API_PORT}...`));
 
