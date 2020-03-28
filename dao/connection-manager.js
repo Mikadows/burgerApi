@@ -6,6 +6,7 @@ module.exports = async function () {
         useNewUrlParser: true,
         useCreateIndex: true,
         useUnifiedTopology: true,
+        useFindAndModify: false,
         auth: {
             user: process.env.MONGO_USER,
             password: process.env.MONGO_PASS
