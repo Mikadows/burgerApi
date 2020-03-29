@@ -23,7 +23,7 @@ class UserDao {
      * @returns {Promise<User|undefined>}
      */
     static async findById(id) {
-        return User.findOne({_id: id});
+        return User.findOne({_id: id}).populate('sessions');
     }
 
     /**
