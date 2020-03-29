@@ -1,0 +1,4 @@
+class PromotionController{
+    constructor() {
+    }
+}
