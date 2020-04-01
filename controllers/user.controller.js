@@ -1,2 +1,2 @@
-let userInstance = require('../models').User;
+let userModel = require('../models').User;
 

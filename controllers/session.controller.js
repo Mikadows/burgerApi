@@ -1,4 +1,1 @@
-class SessionController{
-    constructor() {
-    }
-}
+let SessionModel = require('../models').Session;

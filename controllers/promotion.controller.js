@@ -1,4 +1,1 @@
-class PromotionController{
-    constructor() {
-    }
-}
+let PromotionModel = require('../models').Promotion;

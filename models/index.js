@@ -3,5 +3,6 @@ module.exports = {
     Session: require('./session.model'),
     Product: require('./product.model'),
     Menu: require('./menu.model'),
-    Promotion: require('./promotion.model')
+    Promotion: require('./promotion.model'),
+    Order: require('./order.model'),
 };

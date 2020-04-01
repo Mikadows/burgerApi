@@ -1,7 +1,1 @@
-class MenuController {
-    constructor(props) {
-
-
-    }
-
-}
+let MenuModel = require('../models').Menu;
