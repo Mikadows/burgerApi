@@ -1,11 +1,9 @@
 const bodyParser = require('body-parser');
+let OrderController = require('../controllers').OrderController;
 
 module.exports = function(app) {
 
-    app.post('/customer/order', bodyParser.json(), async (req, res) => {
-        //TODO: make an order
-        res.status(501).end();
-    });
+    app.post('/customer/order', bodyParser.json(), OrderController.create_order);
 
     app.get('/customer/products', bodyParser.json(), async (req, res) => {
         //TODO: Get all products
