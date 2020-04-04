@@ -1,5 +1,6 @@
 let ProductModel = require('../models').Product;
 
+
 exports.create_product = async (req, res) => {
     //TODO : Better check data
 
@@ -10,9 +11,6 @@ exports.create_product = async (req, res) => {
         });
         product.save();
         res.status(200).send("Parfait");
-
-
-    //res.status(501).end("missing argument in product");
 };
 
 exports.products_get_all = (req, res, next) => {
@@ -37,7 +35,12 @@ exports.products_get_all = (req, res, next) => {
            };
            res.status(200).json(response);
 
+        }).catch(err =>{
+        res.status(400).json({
+            message: "Bad request",
+            err,
         });
+    });
 };
 
 exports.get_product_by_id = async (req,res)=> {
@@ -58,6 +61,9 @@ exports.get_product_by_id = async (req,res)=> {
             });
         }
     }).catch(err => {
-
+        res.status(400).json({
+            message: "Bad request",
+            err,
+        });
     });
 };
