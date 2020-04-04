@@ -6,13 +6,3 @@ services:
     build: .
     ports:
       - "3000:3000"
-    links:
-      - mongo
-  mongo:
-    container_name: mongo
-    image: mongo
-    environment:
-      - MONGO_INITDB_DATABASE=burgerapi
-    ports:
-      - "27017:27017"
-    restart: always
