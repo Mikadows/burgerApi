@@ -4,11 +4,18 @@ const Product = require('../models').Product;
 class ProductDao {
 
     /**
-     * @param promo {Product}
+     * @param Product {Product}
      * @returns {Promise<Product>}
      */
-    static async saveProduct(promo) {
-        await promo.save();
+    static async saveProduct(Product) {
+        await Product.save();
+    }
+
+    /**
+     * @returns {Promise<Product[]>}
+     */
+    static async findOne(json){
+        return Product.findOne(json).exec();
     }
 
     /**

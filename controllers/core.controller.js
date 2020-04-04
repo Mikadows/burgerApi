@@ -189,15 +189,15 @@ class Core {
                     if (!model)
                         throw new Error(
                             `Unknow ${this.prototype.modelName} document ID ${id}`
-                        )
+                        );
                     // Si pas de données à modifier, on retourne le model
-                    if (!Object.keys(checkedData).length) return model
+                    if (!Object.keys(checkedData).length) return model;
                     // On met les données à jour
-                    model.set(checkedData)
+                    model.set(checkedData);
                     // Pour être sûr, on indique le changement de chacune des données
-                    Object.keys(checkedData).forEach(key => model.markModified(key))
+                    Object.keys(checkedData).forEach(key => model.markModified(key));
                     // On lance la sauvegarde
-                    return model.save()
+                    return model.save();
                 })
         )
     }
@@ -313,5 +313,5 @@ class Core {
     }
 }
 // Nom du model associé au service
-Core.prototype.modelName = 'Default'
-module.exports = Core
+Core.prototype.modelName = 'Default';
+module.exports = Core;
