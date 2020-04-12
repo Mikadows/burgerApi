@@ -59,12 +59,13 @@ class ProductController extends CoreController {
 
     static async get_product_by_id(req,res,next) {
         const id = req.params.productId;
-        // TODO : link this with DAO request
+        ProductController.productNotExist(req,res,next,id);
         ProductModel
             .findById(id)
             .select('name price _id')
             .exec()
             .then(doc => {
+
                 if(doc){
                     res.status(200).json({
                         product: doc,
@@ -104,15 +105,33 @@ class ProductController extends CoreController {
             .catch(next);
     }
 
+    static async delete_product(req,res,next){
+        const id = req.params.productId;
+        Promise.resolve()
+            .then(() =>  ProductController.productNotExist(req,res,next,id))
+            .then(() => {
+                // Check of product alreadyExist to be sure we avoid duplicate Name
+                if(ProductDao.deleteById(id)){
+                    res.status(200).json({
+                        message: `The product ${id} has been delete with success`
+                    }).end();
+                }
+            })
+            .catch(next);
+    }
+
     static async productNotExist(req,res,next,id){
         return Promise.resolve()
             .then(() => ProductDao.findById(id))
-            .catch(err =>{
-                res.status(404).json({
-                    message: "This product doesn't exist"
-                }).end();
-                throw new Error("This product doesn't exist");
-            });
+            .then(product =>{
+                if(!product){
+                    res.status(404).json({
+                        message: "This product doesn't exist"
+                    }).end();
+                    throw new Error("This product doesn't exist");
+                }
+                return product;
+            }).catch(next);
     }
 
     static async productNameAlreadyExist(req,res,next,id) {

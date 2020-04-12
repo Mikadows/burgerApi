@@ -16,10 +16,7 @@ module.exports = function(app) {
     //TODO : MiddleWare check si user is admin
     app.put('/manage/product/:productId', bodyParser.json() , ProductsController.modif_product);
     //TODO : MiddleWare check si user is admin
-    app.delete('/manage/product/:id', async (req, res) => {
-        //TODO : Delete product
-        res.status(501).end();
-    });
+    app.delete('/manage/product/:productId', ProductsController.delete_product);
 
     /**
      * Menu management
