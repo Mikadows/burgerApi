@@ -14,6 +14,14 @@ class ProductDao {
     /**
      * @returns {Promise<Product[]>}
      */
+    static async find(json){
+        return Product.find(json).exec();
+    }
+
+
+    /**
+     * @returns {Promise<Product[]>}
+     */
     static async findOne(json){
         return Product.findOne(json).exec();
     }

@@ -20,9 +20,9 @@ class Core {
     // opération de cosmétiques sur les données
     // -------------------------
     static render(list, options = {}) {
-        const isAlone = !Array.isArray(list)
+        const isAlone = !Array.isArray(list);
         // On s'arrange pour traiter une liste
-        if (isAlone) list = [list]
+        if (isAlone) list = [list];
         return (
             Promise.resolve()
                 .then(() => {
@@ -31,7 +31,7 @@ class Core {
                         // Si la liste des champs est une
                         // chaine de caractère, on la découpe
                         if (typeof options.fields === 'string')
-                            options.fields = options.fields.split(' ')
+                            options.fields = options.fields.split(' ');
                         // On fait le tri des champs
                         list = list.map(model => {
                             return this.filterFields(model.toObject(), options.fields)
@@ -119,47 +119,7 @@ class Core {
                     .then(() => id)
         )
     }
-    // -------------------------
-    // Compte le nombre de documents
-    // -------------------------
-    static count(search = {}) {
-        return this.getModel()
-            .countDocuments(search)
-            .exec()
-    }
-    // -------------------------
-    // Lance une recherche sur les documents avec pagination
-    // -------------------------
-    static paging(search = {}, options = {}) {
-        let limit = options.limit || 20
-        let page = options.page || 0
-        // Sécurité pour éviter les dépassements de mémoires
-        if (limit && limit > 100) limit = 100
-        if (page && page > 100) page = 100
-        return (
-            Promise.resolve()
-                .then(() => this.cleanModelData(search))
-                // On construit l'objet de recherche
-                .then(s => this.paramize(s))
-                .then(s =>
-                    Promise.all([
-                        // On recherche les items
-                        // correspondant à la recherche
-                        this.getModel()
-                            .find(s)
-                            .limit(limit)
-                            .skip(page * limit)
-                            .sort(options.order || '-created_at')
-                            .exec(),
-                        // On compte le nombre d'items
-                        // correspondant à la recherche
-                        Object.keys(s).length
-                            ? this.getModel().countDocuments(s)
-                            : this.getModel().estimatedDocumentCount(),
-                    ])
-                )
-        )
-    }
+
     // -------------------------
     // Méthode de mise à jour d'un document
     // -------------------------
