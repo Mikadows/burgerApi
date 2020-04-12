@@ -1,5 +1,6 @@
 const bodyParser = require('body-parser');
 const ProductsController = require('../controllers').ProductController;
+const MenuController = require('../controllers').MenuController;
 
 module.exports = function(app) {
 
@@ -22,19 +23,16 @@ module.exports = function(app) {
      * Menu management
      */
 
-    app.post('/manage/menu', async (req, res) => {
-        //TODO : Create menu
-        res.status(501).end();
-    });
+    //TODO : MiddleWare check si user is admin
+    app.get('/manage/menus', MenuController.menus_get_all);
 
-    app.put('/manage/menu/:id', async (req, res) => {
-        //TODO : Update menu
-        res.status(501).end();
-    });
-
-    app.delete('/manage/menu/:id', async (req, res) => {
-        //TODO : Delete menu
-        res.status(501).end();
-    });
+    //TODO : MiddleWare check si user is admin
+    app.post('/manage/create/menu', bodyParser.json(), MenuController.create_menu);
+    //TODO : MiddleWare check si user is admin
+    app.get('/manage/menu/:menuId', MenuController.get_menu_by_id);
+    //TODO : MiddleWare check si user is admin
+    app.put('/manage/menu/:menuId', bodyParser.json() , MenuController.modif_menu);
+    //TODO : MiddleWare check si user is admin
+    app.delete('/manage/menu/:menuId', MenuController.delete_menu);
 
 };

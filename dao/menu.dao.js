@@ -19,6 +19,12 @@ class MenuDao {
     }
 
     /**
+     * @returns {Promise<Product[]>}
+     */
+    static async findOne(json){
+        return Menu.findOne(json).exec();
+    }
+    /**
      * @param id {string}
      * @returns {Promise<Menu|undefined>}
      */

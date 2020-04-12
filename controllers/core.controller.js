@@ -52,8 +52,8 @@ class Core {
     // -------------------------
     static find(search, options = {}) {
         // On récupère la limite si il y en a une
-        const limit = options.limit || 300
-        if (!options.force && limit > 300) limit = 300
+        let limit = options.limit || 300
+        if (!options.force && limit > 300) limit = 300;
         return (
             Promise.resolve()
                 .then(() => this.cleanModelData(search))

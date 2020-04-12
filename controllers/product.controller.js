@@ -1,6 +1,5 @@
 let ProductModel = require('../models').Product;
 let ProductDao = require('../dao').ProductDAO;
-let mongoose = require('mongoose');
 let CoreController = require('./core.controller');
 
 class ProductController extends CoreController {
@@ -8,7 +7,6 @@ class ProductController extends CoreController {
      static async create_product(req, res, next){
          let data = req.body;
          const authorizedFields = ['name','price'];
-         console.log(req.body);
          Promise.resolve().then(() => {
             //TODO : verif que le produit avec le meme nom n existe pas deja chez un meme commercant
             return ProductDao.findOne({name:req.body.name});
@@ -90,7 +88,7 @@ class ProductController extends CoreController {
             .then(() =>  ProductController.productNotExist(req,res,next,id))
             .then(product => {
                 // Check of product alreadyExist to be sure we avoid duplicate Name
-                ProductController.productNameAlreadyExist(req,res,next,id);
+                ProductController.productNameNotSameIdAlreadyExist(req,res,next,id);
                 product.set(data);
                 return product.save();
             })
@@ -121,20 +119,19 @@ class ProductController extends CoreController {
     }
 
     static async productNotExist(req,res,next,id){
-        return Promise.resolve()
-            .then(() => ProductDao.findById(id))
+        return Promise.resolve().then(() => ProductDao.findById(id))
             .then(product =>{
                 if(!product){
-                    res.status(404).json({
-                        message: "This product doesn't exist"
+                    res.status(409).json({
+                        message: `The product ${id} doesn't exist`
                     }).end();
-                    throw new Error("This product doesn't exist");
+                    throw new Error(`The product ${id} doesn't exist`);
                 }
                 return product;
             }).catch(next);
     }
 
-    static async productNameAlreadyExist(req,res,next,id) {
+    static async productNameNotSameIdAlreadyExist(req,res,next,id) {
         Promise.resolve().then(() => ProductDao
             .find( {$and:[{"_id":{$ne:id}},{"name": {$eq:req.body.name}}]}
                 ))

@@ -1,5 +1,6 @@
 'use strict';
 const Product = require('../models').Product;
+let mongoose = require('mongoose');
 
 class ProductDao {
 
@@ -38,7 +39,8 @@ class ProductDao {
      * @returns {Promise<Product|undefined>}
      */
     static async findById(id) {
-        return Product.findOne({_id: id});
+        if(mongoose.Types.ObjectId.isValid(id)) return Product.findOne({_id: id});
+        else undefined;
     }
 
     /**
