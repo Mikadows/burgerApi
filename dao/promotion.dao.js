@@ -4,11 +4,11 @@ const Promotion = require('../models').Promotion;
 class PromotionDao {
 
     /**
-     * @param promo {Promotion}
+     * @param promo {{percentReduction: *, menu: *, products: *}}
      * @returns {Promise<Promotion>}
      */
     static async savePromotion(promo) {
-        await promo.save();
+        return Promotion.create(promo);
     }
 
     /**
