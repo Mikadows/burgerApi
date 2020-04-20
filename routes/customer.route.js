@@ -1,7 +1,9 @@
 const bodyParser = require('body-parser');
-const OrderController = require('../controllers').OrderController;
-const ProductsController = require('../controllers').ProductController;
-const MenuController = require('../controllers').MenuController;
+
+const Controllers = require('../controllers');
+const OrderController = Controllers.OrderController;
+const PromotionController = Controllers.PromotionController;
+const MenuController = Controllers.MenuController;
 
 module.exports = function(app) {
 
@@ -14,8 +16,15 @@ module.exports = function(app) {
     app.get('/menu/:menuId', MenuController.get_menu_by_id);
 
     app.get('/customer/promotions', bodyParser.json(), async (req, res) => {
-        //TODO: Get all promotions
-        res.status(501).end();
+        const promotions = PromotionController.getAll();
+
+        if (PromotionController.isEmpty(promotions)) {
+            res.status(204).end();
+        } else {
+            res.status(200).json(promotions);
+        }
+
+
     });
 
 };
