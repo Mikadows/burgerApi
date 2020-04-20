@@ -2,7 +2,6 @@ let MenuModel = require('../models').Menu;
 let MenuDao = require('../dao').MenuDAO;
 let CoreController = require('./core.controller');
 let ProductController = require('./product.controller');
-let ProductDao = require('../dao').ProductDAO;
 
 class MenuController extends CoreController {
 
@@ -39,17 +38,15 @@ class MenuController extends CoreController {
             }
 
 
-            
-                for(let i = 0; i < data.products.length; i++){
-                    let test = ProductController.productNotExist(req,res,next,data.products[i]._id);
-                }
+                const promiseAll = [];
 
+                data.products.forEach((elem, i)=>{
+                    promiseAll.push(ProductController.productNotExist(req,res,next,elem._id));
+                });
 
-
-
-
-                return MenuController.create(data, {authorizedFields});
+                return Promise.all(promiseAll);
             })
+            .then(() => MenuController.create(data, {authorizedFields}))
             .then(menu => MenuController.render(menu))
             .then(menu => res.json(menu))
             .catch(next);
@@ -58,7 +55,7 @@ class MenuController extends CoreController {
     static async menus_get_all(req, res, next) {
         MenuModel
             .find()
-            .select("name price _id")
+            .select("name price products _id")
             .exec()
             .then(docs => {
                 const response = {
@@ -67,10 +64,11 @@ class MenuController extends CoreController {
                         return {
                             name: doc.name,
                             price: doc.price,
+                            products: doc.products,
                             _id: doc._id,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/manage/menu/${doc._id}`
+                                url: `http://localhost:3000/menu/${doc._id}`
                             }
                         };
                     })
@@ -90,16 +88,15 @@ class MenuController extends CoreController {
         MenuController.menuNotExist(req,res,next,id);
         MenuModel
             .findById(id)
-            .select('name price _id')
+            .select('name price products _id')
             .exec()
             .then(doc => {
-
                 if(doc){
                     res.status(200).json({
                         menu: doc,
                         request: {
                             type: 'GET',
-                            url: `http://localhost3000/manage/menus`,
+                            url: `http://localhost:3000/menus`,
                         }
                     });
                 }
@@ -114,11 +111,19 @@ class MenuController extends CoreController {
     static async modif_menu(req, res, next){
         const id = req.params.menuId;
         let data = req.body;
-        Promise.resolve()
+        Promise.resolve().then(() =>{
+            const promiseAll = [];
+            // Check of menu alreadyExist to be sure we avoid duplicate Name
+            if(data.name) promiseAll.push(MenuController.menuNameNotSameIdAlreadyExist(req,res,next,id));
+
+            data.products.forEach((elem, i)=>{
+                promiseAll.push(ProductController.productNotExist(req,res,next,elem._id));
+            });
+
+            return Promise.all(promiseAll);
+        })
             .then(() =>  MenuController.menuNotExist(req,res,next,id))
             .then(menu => {
-                // Check of menu alreadyExist to be sure we avoid duplicate Name
-                MenuController.menuNameNotSameIdAlreadyExist(req,res,next,id);
                 menu.set(data);
                 return menu.save();
             })
@@ -127,7 +132,7 @@ class MenuController extends CoreController {
                 menu,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/manage/menu/${id}`
+                    url: `http://localhost:3000/menu/${id}`
                 }
             }))
             .catch(next);
@@ -148,18 +153,68 @@ class MenuController extends CoreController {
             .catch(next);
     }
 
+    static async delete_menu_product(req,res,next) {
+        const id = req.params.menuId;
+        let data = req.body;
+        Promise.resolve().then(() => {
+            const promiseAll = [];
+
+            data.products.forEach((elem, i)=>{
+                promiseAll.push(ProductController.productNotExist(req,res,next,elem._id));
+            });
+
+            return Promise.all(promiseAll);
+        })
+            .then(() =>  MenuController.menuNotExist(req,res,next,id))
+            .then(() => {
+                // Check of menu alreadyExist to be sure we avoid duplicate Name
+                if(MenuDao.deleteById(id)){
+                    res.status(200).json({
+                        message: `The menu ${id} has been delete with success`
+                    }).end();
+                }
+            })
+            .catch(next);
+    }
+
+    static async add_product(req,res,next){
+        const id = req.params.menuId;
+        let data = req.body;
+        Promise.resolve().then(() =>{
+            const promiseAll = [];
+            data.products.forEach((elem, i)=>{
+                promiseAll.push(ProductController.productNotExist(req,res,next,elem._id));
+            });
+            promiseAll.push(MenuController.menuNotExist(req,res,next,id));
+
+            return Promise.all(promiseAll);
+        })
+            .then(() => {
+                return MenuModel.updateOne({"_id":id},{$push:{products:{$each:data.products}}})
+            })
+            .then(() => MenuController.render(MenuDao.findById(id)))
+            .then(menu => res.json({
+                menu,
+                request: {
+                    type: 'GET',
+                    url: `http://localhost:3000/menu/${id}`
+                }
+            }))
+            .catch(next);
+    }
+
     static async menuNotExist(req,res,next,id){
         return Promise.resolve()
             .then(() => MenuDao.findById(id))
             .then(menu =>{
                 if(!menu){
                     res.status(404).json({
-                        message: "This menu doesn't exist"
+                        message: `This menu ${id} doesn't exist`
                     }).end();
-                    throw new Error("This menu doesn't exist");
+                    throw new Error(`This menu ${id} doesn't exist`);
                 }
                 return menu;
-            }).catch(next);
+            });
     }
 
     static async menuNameNotSameIdAlreadyExist(req,res,next,id) {

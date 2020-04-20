@@ -40,7 +40,7 @@ class ProductController extends CoreController {
                             _id: doc._id,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/manage/product/${doc._id}`
+                                url: `http://localhost:3000/product/${doc._id}`
                             }
                         };
                     })
@@ -69,7 +69,7 @@ class ProductController extends CoreController {
                         product: doc,
                         request: {
                             type: 'GET',
-                            url: `http://localhost3000/manage/products`,
+                            url: `http://localhost:3000/products`,
                         }
                     });
                 }
@@ -97,7 +97,7 @@ class ProductController extends CoreController {
                 product,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/manage/product/${id}`
+                    url: `http://localhost:3000/product/${id}`
                 }
             }))
             .catch(next);
@@ -128,7 +128,7 @@ class ProductController extends CoreController {
                     throw new Error(`The product ${id} doesn't exist`);
                 }
                 return product;
-            }).catch(next);
+            });
     }
 
     static async productNameNotSameIdAlreadyExist(req,res,next,id) {

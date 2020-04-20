@@ -1,5 +1,6 @@
 'use strict';
 const Menu = require('../models').Menu;
+let mongoose = require('mongoose');
 
 class MenuDao {
 
@@ -29,7 +30,8 @@ class MenuDao {
      * @returns {Promise<Menu|undefined>}
      */
     static async findById(id) {
-        return Menu.findOne({_id: id}).populate('products');
+        if(mongoose.Types.ObjectId.isValid(id)) return Menu.findOne({_id: id}).populate('products');
+        else undefined;
     }
 
     /**
