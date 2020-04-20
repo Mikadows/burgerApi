@@ -4,20 +4,20 @@ class PromotionController {
 
     static addPromotion(menus, products, percentReduction){
         if ((!this.isEmpty(menus) || !this.isEmpty(products)) && percentReduction){
-            const promotion = {"menu":menus, "products":products, "percentReduction":percentReduction}
-            PromotionDAO.savePromotion(promotion);
+            let promotion = {"menu":menus, "products":products, "percentReduction":percentReduction}
+            promotion = PromotionDAO.savePromotion(promotion);
             return promotion;
         } else {
-            return -1; //Bad request
+            throw new Error("Bad Request");
+            //return -1; //Bad request
         }
-        return 0;
     }
 
-    static modifyPromotion(){
+    static modifyPromotion(id, menus, products, percentReduction){
 
     }
 
-    static deletePromotion(){
+    static deletePromotion(id){
 
     }
 
@@ -27,6 +27,7 @@ class PromotionController {
     static getAll(){
         const promotions = PromotionDAO.getAllPromotions();
 
+        console.log(JSON.stringify(promotions))
         return promotions;
     }
 
@@ -41,7 +42,6 @@ class PromotionController {
     static isEmpty(obj){
         return Object.keys(obj).length === 0;
     }
-
 
 }
 

@@ -4,18 +4,24 @@ const Promotion = require('../models').Promotion;
 class PromotionDao {
 
     /**
-     * @param promo {{percentReduction: *, menu: *, products: *}}
+     *
+     * @param promo
      * @returns {Promise<Promotion>}
      */
-    static async savePromotion(promo) {
-        return Promotion.create(promo);
+    static savePromotion(promo) {
+        return Promotion.create(promo, (err, res) => {
+            if (err) return false;
+
+            console.log('2' + res);
+            return res;
+        });
     }
 
     /**
      * @returns {Promise<Promotion[]>}
      */
     static async getAllPromotions() {
-        return Promotion.find().populate('menu').populate('products');
+        return Promotion.find({}).populate('menu').populate('products');
     }
 
     /**
