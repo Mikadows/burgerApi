@@ -1,21 +1,19 @@
 const bodyParser = require('body-parser');
+
 const Controllers = require('../controllers');
 const OrderController = Controllers.OrderController;
 const PromotionController = Controllers.PromotionController;
+const MenuController = Controllers.MenuController;
 
 module.exports = function(app) {
 
     app.post('/customer/order', bodyParser.json(), OrderController.create_order);
 
-    app.get('/customer/products', bodyParser.json(), async (req, res) => {
-        //TODO: Get all products
-        res.status(501).end();
-    });
+    app.get('/products', ProductsController.products_get_all);
+    app.get('/product/:productId', ProductsController.get_product_by_id);
 
-    app.get('/customer/menus', bodyParser.json(), async (req, res) => {
-        //TODO: Get all menus
-        res.status(501).end();
-    });
+    app.get('/menus', MenuController.menus_get_all);
+    app.get('/menu/:menuId', MenuController.get_menu_by_id);
 
     app.get('/customer/promotions', bodyParser.json(), async (req, res) => {
         const promotions = PromotionController.getAll();
