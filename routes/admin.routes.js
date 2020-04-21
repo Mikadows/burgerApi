@@ -38,21 +38,9 @@ module.exports = function(app) {
      * Promotions management
      */
 
-    app.post('/manage/promotion', bodyParser.json(), async (req, res) => {
-        if( req.body.menus && req.body.products && req.body.percentReduction ) {
-            const ret = PromotionController.addPromotion(req.body.menus, req.body.products, req.body.percentReduction);
+    app.post('/manage/promotion', bodyParser.json(), PromotionController.addPromotion2);
 
-            if(ret === -1) {
-                res.status(400).end();
-            } else if (ret === 0){
-                res.status(500).end()
-            }
+    app.put('/manage/promotion/:promotionId', bodyParser.json(),  PromotionController.modifyPromotion);
 
-            res.status(200).json(ret);
-
-        }
-        res.status(400).end();
-
-    });
-
+    app.delete('/manage/promotion/:promotionId', PromotionController.deletePromotion);
 };

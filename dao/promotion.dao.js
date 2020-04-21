@@ -1,21 +1,35 @@
 'use strict';
 const Promotion = require('../models').Promotion;
+const mongoose = require('mongoose');
 
 class PromotionDao {
 
     /**
-     * @param promo {{percentReduction: *, menu: *, products: *}}
+     *
+     * @param promo
      * @returns {Promise<Promotion>}
      */
-    static async savePromotion(promo) {
-        return Promotion.create(promo);
+    static savePromotion(promo) {
+        return Promotion.create(promo, (err, res) => {
+            if (err) return false;
+
+            console.log('2' + res);
+            return res;
+        });
     }
 
     /**
      * @returns {Promise<Promotion[]>}
      */
     static async getAllPromotions() {
-        return Promotion.find().populate('menu').populate('products');
+        return Promotion.find({}).populate('menu').populate('products');
+    }
+
+    /**
+     * @returns {Promise<Product[]>}
+     */
+    static async find(json){
+        return Promotion.find(json).exec();
     }
 
     /**
@@ -23,7 +37,16 @@ class PromotionDao {
      * @returns {Promise<Promotion|undefined>}
      */
     static async findById(id) {
-        return Promotion.findOne({_id: id}).populate('menu').populate('products');
+        if(mongoose.Types.ObjectId.isValid(id)) return Promotion.findOne({_id: id});
+        else undefined;
+    }
+
+    /**
+     * @param json
+     * @returns {Promise<AggregationCursor|RegExpExecArray>}
+     */
+    static async findOne(json){
+        return Promotion.findOne(json).exec();
     }
 
     /**
