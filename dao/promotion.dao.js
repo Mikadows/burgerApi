@@ -1,5 +1,6 @@
 'use strict';
 const Promotion = require('../models').Promotion;
+const mongoose = require('mongoose');
 
 class PromotionDao {
 
@@ -25,11 +26,27 @@ class PromotionDao {
     }
 
     /**
+     * @returns {Promise<Product[]>}
+     */
+    static async find(json){
+        return Promotion.find(json).exec();
+    }
+
+    /**
      * @param id {string}
      * @returns {Promise<Promotion|undefined>}
      */
     static async findById(id) {
-        return Promotion.findOne({_id: id}).populate('menu').populate('products');
+        if(mongoose.Types.ObjectId.isValid(id)) return Promotion.findOne({_id: id});
+        else undefined;
+    }
+
+    /**
+     * @param json
+     * @returns {Promise<AggregationCursor|RegExpExecArray>}
+     */
+    static async findOne(json){
+        return Promotion.findOne(json).exec();
     }
 
     /**

@@ -38,55 +38,9 @@ module.exports = function(app) {
      * Promotions management
      */
 
-    app.post('/manage/promotion', bodyParser.json(), (req, res) => {
+    app.post('/manage/promotion', bodyParser.json(), PromotionController.addPromotion2);
 
-            //try{
-            Promise.resolve().then( () => {
-                if( req.body.menus && req.body.products && req.body.percentReduction ) {
-                    return PromotionController.addPromotion(req.body.menus,
-                                                            req.body.products,
-                                                            req.body.percentReduction);
-                    //res.status(201).json(ret);
-                } else {
-                    throw new Error('Bad request');
-                }
-            }).then( (ret ) => {
-                if(ret){
-                    res.status(201).json(ret);
-                }
-            }).catch( (err) => {
-                    if(err) res.status(500).end();
-            } );
+    app.put('/manage/promotion/:promotionId', bodyParser.json(),  PromotionController.modifyPromotion);
 
-
-
-
-                //const ret = await PromotionController.addPromotion(req.body.menus, req.body.products, req.body.percentReduction);
-
-/*
-                if(ret) {
-
-                } else {
-                    res.status(409).end();
-                }*/
-/*            }catch (e) {
-                res.status(500).end();
-            }*/
-
-        //res.status(400).end();
-    });
-
-    app.put('manage/promotion', bodyParser.json(), async (req, res) => {
-        if( req.body._id && req.body.menus && req.body.products && req.body.percentReduction ) {
-            //TODO: Modify controller
-        }
-    });
-
-    app.delete('manage/promotion', bodyParser.json(), async (req, res) => {
-        if(req.body._id){
-
-        }
-        res.status(400).end();
-
-    });
+    app.delete('/manage/promotion/:promotionId', PromotionController.deletePromotion);
 };
