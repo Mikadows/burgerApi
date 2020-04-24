@@ -232,7 +232,7 @@ class Core {
             // On sauvegarde les données dans l'objet
             result[key] = data[key]
         });
-        
+
         return result
     }
     // -------------------------

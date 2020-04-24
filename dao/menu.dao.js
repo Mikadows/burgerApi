@@ -2,6 +2,7 @@
 const Menu = require('../models').Menu;
 let mongoose = require('mongoose');
 
+
 class MenuDao {
 
     /**
@@ -44,6 +45,7 @@ class MenuDao {
         });
         return true;
     }
+
 
     /**
      *

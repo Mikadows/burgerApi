@@ -28,8 +28,8 @@ module.exports = function(app) {
     //TODO : MiddleWare check si user is admin
     app.delete('/manage/menu/:menuId', MenuController.delete_menu);
     //TODO : MiddleWare check si user is admin
-    app.put('/manage/menu/addproduct/:menuId', bodyParser.json() , MenuController.add_product);
+    app.put('/manage/menu/product/:menuId', bodyParser.json() , MenuController.add_product);
     //TODO : MiddleWare check si user is admin
-    app.delete('/manage/menu/:menuId/:productId', MenuController.delete_menu_product);
+    app.delete('/manage/menu/product/:menuId', bodyParser.json() ,MenuController.delete_menu_product);
 
 };

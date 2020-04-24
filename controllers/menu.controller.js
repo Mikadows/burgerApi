@@ -2,6 +2,7 @@ let MenuModel = require('../models').Menu;
 let MenuDao = require('../dao').MenuDAO;
 let CoreController = require('./core.controller');
 let ProductController = require('./product.controller');
+let mongoose = require('mongoose');
 
 class MenuController extends CoreController {
 
@@ -156,24 +157,45 @@ class MenuController extends CoreController {
     static async delete_menu_product(req,res,next) {
         const id = req.params.menuId;
         let data = req.body;
+        let menu = null;
+        const promiseAll = [];
         Promise.resolve().then(() => {
-            const promiseAll = [];
 
-            data.products.forEach((elem, i)=>{
+            data.products.forEach((elem, i) => {
                 promiseAll.push(ProductController.productNotExist(req,res,next,elem._id));
             });
+            promiseAll.push( MenuController.menuNotExist(req,res,next,id));
 
             return Promise.all(promiseAll);
         })
-            .then(() =>  MenuController.menuNotExist(req,res,next,id))
             .then(() => {
-                // Check of menu alreadyExist to be sure we avoid duplicate Name
-                if(MenuDao.deleteById(id)){
-                    res.status(200).json({
-                        message: `The menu ${id} has been delete with success`
-                    }).end();
+            // taking products id in order to check them
+            return MenuModel.find({_id: id}).then(doc => {
+                let products = doc[0].products;
+                // remove id one by one
+                data.products.forEach(elem => {
+                    let index = products.indexOf(elem._id);
+                    if(index !== -1){
+                        products.splice(index,1);
+                    }
+                });
+                // cast into ObjectId
+                let productsFinal = [];
+                products.forEach(elem =>{
+                    productsFinal.push(mongoose.Types.ObjectId(elem));
+                });
+                // push du new array objectId of product
+                return MenuModel.updateOne({'_id': id},{'$set':{"products":productsFinal}});
+            });
+        })
+            .then(() => MenuController.render(MenuDao.findById(id)))
+            .then(menu => res.json({
+                menu,
+                request: {
+                    type: 'GET',
+                    url: `http://localhost:3000/menu/${id}`
                 }
-            })
+            }))
             .catch(next);
     }
 
@@ -190,6 +212,7 @@ class MenuController extends CoreController {
             return Promise.all(promiseAll);
         })
             .then(() => {
+                console.log(data.products)
                 return MenuModel.updateOne({"_id":id},{$push:{products:{$each:data.products}}})
             })
             .then(() => MenuController.render(MenuDao.findById(id)))
