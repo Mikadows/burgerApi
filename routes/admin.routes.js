@@ -1,6 +1,8 @@
 const bodyParser = require('body-parser');
-const ProductsController = require('../controllers').ProductController;
-const MenuController = require('../controllers').MenuController;
+const Controllers = require('../controllers');
+const ProductsController = Controllers.ProductController;
+const MenuController = Controllers.MenuController;
+const PromotionController = Controllers.PromotionController;
 
 module.exports = function(app) {
 
@@ -32,4 +34,13 @@ module.exports = function(app) {
     //TODO : MiddleWare check si user is admin
     app.delete('/manage/menu/product/:menuId', bodyParser.json() ,MenuController.delete_menu_product);
 
+    /**
+     * Promotions management
+     */
+
+    app.post('/manage/promotion', bodyParser.json(), PromotionController.addPromotion2);
+
+    app.put('/manage/promotion/:promotionId', bodyParser.json(),  PromotionController.modifyPromotion);
+
+    app.delete('/manage/promotion/:promotionId', PromotionController.deletePromotion);
 };
