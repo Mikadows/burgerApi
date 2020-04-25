@@ -26,11 +26,13 @@ class PromotionController extends CoreController {
      */
     static async addPromotion2(req, res, next){
         const data = req.body;
-        const authorizedFields = ['name', 'menus','products', 'percentReduction'];
+        const authorizedFields = ['name', 'menus','products', 'percentReduction', 'startDate', 'endDate'];
         Promise.resolve().then(() => {
 
-            if(req.body.name && req.body.menus && req.body.products && req.body.percentReduction ){
-                return PromotionDAO.findOne({name:req.body.name, menus:req.body.menus, products:req.body.products, percentReduction:req.body.percentReduction});
+            if(req.body.name && req.body.menus && req.body.products && req.body.percentReduction && req.body.startDate && req.body.endDate ){
+                return PromotionDAO.findOne({name:req.body.name, menus:req.body.menus, products:req.body.products,
+                    percentReduction:req.body.percentReduction,
+                    startDate: Date.parse(req.body.startDate), endDate: Date.parse(req.body.endDate)});
             } else {
                 res.status(400).end();
             }
@@ -128,7 +130,7 @@ class PromotionController extends CoreController {
                 }
             })
             .populate('products')
-            .select("_id name menus products percentReduction")
+            .select("_id name menus products percentReduction startDate endDate")
             .exec()
             .then(docs => {
                 const response = {
@@ -183,7 +185,7 @@ class PromotionController extends CoreController {
                 }
             })
             .populate('products')
-            .select("_id name menus products percentReduction")
+            .select("_id name menus products percentReduction startDate endDate")
             .then(doc => {
                 if(doc){
                     res.status(200).json({

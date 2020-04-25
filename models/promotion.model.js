@@ -12,7 +12,9 @@ const promotionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Product'
     }],
-    percentReduction: Number
+    percentReduction: Number,
+    startDate: Date,
+    endDate: Date
 });
 
 module.exports = mongoose.model('Promotion', promotionSchema);
