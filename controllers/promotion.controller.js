@@ -1,6 +1,8 @@
 const PromotionDAO = require('../dao').PromotionDAO;
 const CoreController = require('./core.controller');
 const PromotionModel = require('../models').Promotion;
+// const MenuModel = require('../models').Menu;
+const mongoose = require('mongoose');
 
 class PromotionController extends CoreController {
 
@@ -117,6 +119,15 @@ class PromotionController extends CoreController {
     static async getAll(req, res, next) {
         PromotionModel
             .find()
+            .populate({
+                path: 'menus',
+                model: 'Menu',
+                populate: {
+                    path: 'products',
+                    model: 'Product'
+                }
+            })
+            .populate('products')
             .select("_id name menus products percentReduction")
             .exec()
             .then(docs => {
@@ -163,12 +174,20 @@ class PromotionController extends CoreController {
 
         PromotionModel
             .findById(id)
+            .populate({
+                path: 'menus',
+                model: 'Menu',
+                populate: {
+                    path: 'products',
+                    model: 'Product'
+                }
+            })
+            .populate('products')
             .select("_id name menus products percentReduction")
-            .exec()
             .then(doc => {
                 if(doc){
                     res.status(200).json({
-                        product: doc
+                        promotion: doc
                     });
                 }
             }).catch(err => {
@@ -201,9 +220,9 @@ class PromotionController extends CoreController {
             .then(product =>{
                 if(!product){
                     res.status(409).json({
-                        message: `The product ${id} doesn't exist`
+                        message: `The promotion ${id} doesn't exist`
                     }).end();
-                    throw new Error(`The product ${id} doesn't exist`);
+                    throw new Error(`The promotion ${id} doesn't exist`);
                 }
                 return product;
             });
@@ -224,12 +243,13 @@ class PromotionController extends CoreController {
             .then(promotion => {
                 if (Array.isArray(promotion) && promotion.length) {
                     res.status(409).json({
-                        message: "This promtion already exist"
+                        message: "This promotion already exist"
                     }).end();
-                    throw new Error("This promtion already exist");
+                    throw new Error("This promotion already exist");
                 }
             }).catch(next)
     }
+
 
 }
 
