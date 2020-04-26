@@ -6,11 +6,17 @@ let mongoose = require('mongoose');
 
 class MenuController extends CoreController {
 
+    static render(list,options = {}){
+        const populates = [
+            {path:'products'}
+        ];
+        return super.render(list, { ...options,populates});
+    }
+
     static async create_menu(req, res, next) {
         let data = req.body;
         const authorizedFields = ['name','price','products'];
         Promise.resolve().then(() => {
-            //TODO : verif que le produit avec le meme nom n existe pas deja chez un meme commercant
             return MenuDao.findOne({name:req.body.name});
         })
             .then(menu => {
@@ -55,7 +61,7 @@ class MenuController extends CoreController {
 
     static async menus_get_all(req, res, next) {
         MenuModel
-            .find()
+            .find().populate("products")
             .select("name price products _id")
             .exec()
             .then(docs => {
@@ -88,7 +94,7 @@ class MenuController extends CoreController {
         const id = req.params.menuId;
         MenuController.menuNotExist(req,res,next,id);
         MenuModel
-            .findById(id)
+            .findById(id).populate("products")
             .select('name price products _id')
             .exec()
             .then(doc => {
@@ -116,8 +122,7 @@ class MenuController extends CoreController {
             const promiseAll = [];
             // Check of menu alreadyExist to be sure we avoid duplicate Name
             if(data.name) promiseAll.push(MenuController.menuNameNotSameIdAlreadyExist(req,res,next,id));
-
-            data.products.forEach((elem, i)=>{
+            if(data.products) data.products.forEach((elem, i)=>{
                 promiseAll.push(ProductController.productNotExist(req,res,next,elem._id));
             });
 
@@ -212,7 +217,7 @@ class MenuController extends CoreController {
             return Promise.all(promiseAll);
         })
             .then(() => {
-                console.log(data.products)
+                console.log(data.products);
                 return MenuModel.updateOne({"_id":id},{$push:{products:{$each:data.products}}})
             })
             .then(() => MenuController.render(MenuDao.findById(id)))

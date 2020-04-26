@@ -6,11 +6,18 @@ let mongoose = require('mongoose');
 class MenuDao {
 
     /**
-     * @param promo {Menu}
+     * @param Menu {Menu}
      * @returns {Promise<Menu>}
      */
-    static async saveMenu(promo) {
-        await promo.save();
+    static async saveMenu(Menu) {
+        await Menu.save();
+    }
+
+    /**
+     * @returns {Promise<Product[]>}
+     */
+    static async find(json){
+        return Menu.find(json).exec();
     }
 
     /**
@@ -45,6 +52,7 @@ class MenuDao {
         });
         return true;
     }
+
 
 
     /**

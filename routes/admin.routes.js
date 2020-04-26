@@ -3,6 +3,7 @@ const Controllers = require('../controllers');
 const ProductsController = Controllers.ProductController;
 const MenuController = Controllers.MenuController;
 const PromotionController = Controllers.PromotionController;
+const OrderController = Controllers.OrderController;
 
 module.exports = function(app) {
 
@@ -12,8 +13,6 @@ module.exports = function(app) {
 
     //TODO : MiddleWare check si user is admin
     app.post('/manage/create/product', bodyParser.json(), ProductsController.create_product);
-
-
     //TODO : MiddleWare check si user is admin
     app.put('/manage/product/:productId', bodyParser.json() , ProductsController.modif_product);
     //TODO : MiddleWare check si user is admin
@@ -30,9 +29,15 @@ module.exports = function(app) {
     //TODO : MiddleWare check si user is admin
     app.delete('/manage/menu/:menuId', MenuController.delete_menu);
     //TODO : MiddleWare check si user is admin
-    app.put('/manage/menu/product/:menuId', bodyParser.json() , MenuController.add_product);
+    app.put('/manage/menu/products/:menuId', bodyParser.json() , MenuController.add_product);
     //TODO : MiddleWare check si user is admin
-    app.delete('/manage/menu/product/:menuId', bodyParser.json() ,MenuController.delete_menu_product);
+    app.delete('/manage/menu/products/:menuId', bodyParser.json(), MenuController.delete_menu_product);
+
+    /**
+     * Order management
+     */
+
+    app.get('/manage/orders', OrderController.orders_get_all);
 
     /**
      * Promotions management
