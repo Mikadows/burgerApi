@@ -14,5 +14,9 @@ module.exports = function(app) {
         res.status(501).end();
     });
 
+    app.get('/number', async (req, res) => {
+       res.status(200).json({ number: 5});
+    });
+
 
 };
