@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 module.exports = async function () {
-    await mongoose.connect(process.env.MONGODB_ADDON_URI, {
+    const ret = await mongoose.connect(process.env.MONGODB_ADDON_URI, {
         useNewUrlParser: true,
         useCreateIndex: true,
         useUnifiedTopology: true,
@@ -13,5 +13,9 @@ module.exports = async function () {
         },
         authSource: process.env.MONGO_AUTH_SOURCE
     });
-    console.log('The connection with MongoDB is established...');
+    if(ret){
+        console.log('The connection with MongoDB is established...');
+    } else {
+        console.error('The connection with MongoDB FAILED !!');
+    }
 };

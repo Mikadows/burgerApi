@@ -275,6 +275,7 @@ class Core {
         return mongoose.model(this.prototype.modelName)
     }
 }
+
 // Nom du model associé au service
 Core.prototype.modelName = 'Default';
 module.exports = Core;

@@ -3,5 +3,6 @@ module.exports = {
     SessionDAO: require('./session.dao'),
     ProductDAO: require('./product.dao'),
     MenuDAO: require('./menu.dao'),
-    PromotionDAO: require('./promotion.dao')
+    PromotionDAO: require('./promotion.dao'),
+    OrderDAO: require('./order.dao')
 };

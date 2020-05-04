@@ -4,6 +4,13 @@ let CoreController = require('./core.controller');
 
 class ProductController extends CoreController {
 
+    static render(list,options = {}){
+        const populates = [
+            {path:'products'}
+        ];
+        return super.render(list, { ...options,populates});
+    }
+
      static async create_product(req, res, next){
          let data = req.body;
          const authorizedFields = ['name','price'];
@@ -124,7 +131,7 @@ class ProductController extends CoreController {
                 if(!product){
                     res.status(409).json({
                         message: `The product ${id} doesn't exist`
-                    }).end();
+                    });
                     throw new Error(`The product ${id} doesn't exist`);
                 }
                 return product;
