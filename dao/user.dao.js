@@ -19,6 +19,13 @@ class UserDao {
     }
 
     /**
+     * @returns {Promise<Product[]>}
+     */
+    static async find(json){
+        return User.find(json).exec();
+    }
+
+    /**
      * @param id {string}
      * @returns {Promise<User|undefined>}
      */
@@ -35,6 +42,24 @@ class UserDao {
             if (err) return false;
         });
         return true;
+    }
+
+    /**
+     * @returns {Promise<User[]>}
+     */
+    static async findOne(json){
+        return User.findOne(json).exec();
+    }
+
+    /**
+     *
+     * @param id
+     * @returns {boolean}
+     */
+    static async isAdmin(id){
+        let UserExist = await UserDao.find({$and:[{type:{$eq:"admin"}},{_id: id}]});
+        if(Array.isArray(UserExist) && UserExist.length) return true;
+        else return false;
     }
 
     /**

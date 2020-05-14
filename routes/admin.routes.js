@@ -4,6 +4,7 @@ const ProductsController = Controllers.ProductController;
 const MenuController = Controllers.MenuController;
 const PromotionController = Controllers.PromotionController;
 const OrderController = Controllers.OrderController;
+const AuthMiddleware = require('../middlewares/auth.middleware');
 
 module.exports = function(app) {
 
