@@ -102,16 +102,6 @@ class PromotionController extends CoreController {
     }
 
     /**
-     * Get all promotions
-     */
-    // static getAll(){
-    //     const promotions = PromotionDAO.getAllPromotions();
-    //
-    //     console.log(JSON.stringify(promotions))
-    //     return promotions;
-    // }
-
-    /**
      * Get All promotions
      * @param req
      * @param res
