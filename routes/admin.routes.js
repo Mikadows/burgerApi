@@ -7,6 +7,12 @@ const OrderController = Controllers.OrderController;
 
 module.exports = function(app) {
 
+
+    /**
+     * Apply is admin middleware to all routes below
+     */
+    app.use(AuthMiddleware.isAdmin);
+
     /**
      * Product management
      */
