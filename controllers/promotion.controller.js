@@ -34,7 +34,7 @@ class PromotionController extends CoreController {
                 return PromotionController.create(data, {authorizedFields});
             })
             .then(promotion => PromotionController.render(promotion))
-            .then(promotion => res.json(promotion))
+            .then(promotion => res.status(201).json(promotion))
             .catch(next);
     }
 
@@ -78,7 +78,7 @@ class PromotionController extends CoreController {
                 return promotion.save();
             })
             .then(product => PromotionController.render(product))
-            .then(product => res.json({
+            .then(product => res.status(200).json({
                 product,
                 request: {
                     type: 'GET',
@@ -128,10 +128,8 @@ class PromotionController extends CoreController {
                 };
                 if(response.count === 0){
                     res.status(204).end();
-                } else {
-                    res.status(200).json(response);
                 }
-
+                res.status(200).json(response);
             }).catch(err =>{
             res.status(400).json({
                 message: "Bad request",
@@ -198,7 +196,7 @@ class PromotionController extends CoreController {
         return Promise.resolve().then(() => PromotionDAO.findById(id))
             .then(product =>{
                 if(!product){
-                    res.status(409).json({
+                    res.status(404).json({
                         message: `The promotion ${id} doesn't exist`
                     }).end();
                     throw new Error(`The promotion ${id} doesn't exist`);

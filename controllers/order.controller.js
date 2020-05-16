@@ -50,7 +50,7 @@ class OrderController extends CoreController {
             })
             .then( () => OrderController.create(data, {authorizedFields}))
             .then( order => OrderController.render(order))
-            .then( order => res.json(order))
+            .then( order => res.status(201).json(order))
             .catch(next);
     };
 

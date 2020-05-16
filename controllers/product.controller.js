@@ -15,7 +15,6 @@ class ProductController extends CoreController {
          let data = req.body;
          const authorizedFields = ['name','price'];
          Promise.resolve().then(() => {
-            //TODO : verif que le produit avec le meme nom n existe pas deja chez un meme commercant
             return ProductDao.findOne({name:req.body.name});
          })
              .then(product => {
@@ -28,7 +27,7 @@ class ProductController extends CoreController {
              return ProductController.create(data, {authorizedFields});
          })
              .then(product => ProductController.render(product))
-             .then(product => res.json(product))
+             .then(product => res.status(201).json(product))
              .catch(next);
      };
 
@@ -100,7 +99,7 @@ class ProductController extends CoreController {
                 return product.save();
             })
             .then(product => ProductController.render(product))
-            .then(product => res.json({
+            .then(product => res.status(200).json({
                 product,
                 request: {
                     type: 'GET',
@@ -129,7 +128,7 @@ class ProductController extends CoreController {
         return Promise.resolve().then(() => ProductDao.findById(id))
             .then(product =>{
                 if(!product){
-                    res.status(409).json({
+                    res.status(404).json({
                         message: `The product ${id} doesn't exist`
                     });
                     throw new Error(`The product ${id} doesn't exist`);

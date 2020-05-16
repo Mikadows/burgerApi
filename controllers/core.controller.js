@@ -104,9 +104,6 @@ class Core {
                 }
             )
             .then((model) => {
-                if (!model) {
-                    throw new Error(`Unknow item ${id}`)
-                }
                 return this.render(model, options)
             })
     }

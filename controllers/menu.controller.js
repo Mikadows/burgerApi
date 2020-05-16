@@ -9,7 +9,7 @@ class MenuController extends CoreController {
         const populates = [
             {
                 path:'products',
-                select:'name price'
+                select: 'name price'
             }
         ];
         return super.render(list, { ...options,populates});
@@ -37,8 +37,8 @@ class MenuController extends CoreController {
                     }
                 })}
             ).catch(err => {
-                    res.status(400).json({
-                        message: "Bad request",
+                    res.status(500).json({
+                        message: "Internal Server Error",
                         err,
                     })
             });
@@ -75,7 +75,6 @@ class MenuController extends CoreController {
                 throw new Error("This menu need 2 products to be create");
             }
 
-
                 const promiseAll = [];
 
                 data.products.forEach((elem, i)=>{
@@ -86,7 +85,7 @@ class MenuController extends CoreController {
             })
             .then(() => MenuController.create(data, {authorizedFields}))
             .then(menu => MenuController.render(menu))
-            .then(menu => res.json(menu))
+            .then(menu => res.status(201).json(menu))
             .catch(next);
     };
 
@@ -114,6 +113,9 @@ class MenuController extends CoreController {
                         };
                     })
                 };
+                if(response.count === 0){
+                    res.status(204).end();
+                }
                 res.status(200).json(response);
             }).catch(err => {
             res.status(400).json({
@@ -122,31 +124,6 @@ class MenuController extends CoreController {
             })
         });
     };
-
-    /*static async get_menu_by_id(req,res,next) {
-        const id = req.params.menuId;
-        MenuController.menuNotExist(req,res,next,id);
-        MenuModel
-            .findById(id).populate("products")
-            .select('name price products _id')
-            .exec()
-            .then(doc => {
-                if(doc){
-                    res.status(200).json({
-                        menu: doc,
-                        request: {
-                            type: 'GET',
-                            url: `${process.env.SERV_ADDRESS}/menus`,
-                        }
-                    });
-                }
-            }).catch(err => {
-            res.status(400).json({
-                message: "Bad request",
-                err,
-            });
-        });
-    };*/
 
     static async modif_menu(req, res, next){
         const id = req.params.menuId;
@@ -167,7 +144,7 @@ class MenuController extends CoreController {
                 return menu.save();
             })
             .then(menu => MenuController.render(menu))
-            .then(menu => res.json({
+            .then(menu => res.status(200).json({
                 menu,
                 request: {
                     type: 'GET',

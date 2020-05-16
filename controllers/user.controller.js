@@ -30,7 +30,7 @@ class UserController extends CoreController{
             return UserController.create(data, {authorizedFields});
         })
             .then(user => UserController.render(user))
-            .then(user => res.json(user))
+            .then(user => res.status(201).json(user))
             .catch(next);
     };
 
@@ -61,7 +61,7 @@ class UserController extends CoreController{
         const session = await SessionController.create(user,token);
 
         if(session){
-            res.status(200).json({
+            res.status(201).json({
                 token: session.token
             });
         } else {
@@ -87,7 +87,7 @@ class UserController extends CoreController{
                 message: `The user has been logout`
             })
         } else {
-            res.status(404).json({
+            res.status(409).json({
                 message: `Invalid token or user is not logged`
             });
         }
