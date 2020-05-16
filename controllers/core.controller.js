@@ -11,9 +11,20 @@ class Core {
         return (
             Promise.resolve()
                 .then(() => {
+                    // On regarde si on ne doit afficher que certains champs
+                    if (options.fields) {
+                        // Si la liste des champs est une
+                        // chaine de caractère, on la découpe
+                        if (typeof options.fields === 'string')
+                            options.fields = options.fields.split(' ');
+                        // On fait le tri des champs
+                        list = list.map(model => {
+                            return this.filterFields(model.toObject(), options.fields)
+                        })
+                    }
                     // On regarde si on doit gérer des populates
                     if (options.populates) {
-                        return this.getModel().populate(list, options.populates);
+                        return this.getModel().populate(list, options.populates)
                     }
                     return list;
                 })
@@ -74,6 +85,30 @@ class Core {
                     return model.save();
                 })
         )
+    }
+
+    // -------------------------
+    // Return the render of a documents
+    // id can be a document or an ID
+    // -------------------------
+    static read(id, options = {}) {
+        return Promise.resolve()
+            .then(() =>
+                {
+                    if(typeof id === 'object' && id.length > 1) {
+                        return this.getModel().find();
+                    }
+                    return typeof id === 'object'
+                        ? this.getModel().findOne(id).exec()
+                        : this.getModel().findById(id).exec()
+                }
+            )
+            .then((model) => {
+                if (!model) {
+                    throw new Error(`Unknow item ${id}`)
+                }
+                return this.render(model, options)
+            })
     }
 
     // -------------------------

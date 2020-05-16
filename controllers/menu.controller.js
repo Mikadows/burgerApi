@@ -7,9 +7,41 @@ let mongoose = require('mongoose');
 class MenuController extends CoreController {
     static render(list,options = {}){
         const populates = [
-            {path:'products'}
+            {
+                path:'products',
+                select:'name price'
+            }
         ];
         return super.render(list, { ...options,populates});
+    }
+
+    static async get_menu_by_id(req, res, next){
+        const id = req.params.menuId;
+        await MenuController.menuNotExist(req,res,next,id);
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products'
+        ];
+
+        Promise.resolve()
+            .then(() => MenuDao.findById(id))
+            .then(menu => MenuController.read(menu, { fields }))
+            .then(menu => {
+                return res.json({
+                    menu,
+                    request: {
+                        type: 'GET',
+                        url: `${process.env.SERV_ADDRESS}/menu/${menu._id}`
+                    }
+                })}
+            ).catch(err => {
+                    res.status(400).json({
+                        message: "Bad request",
+                        err,
+                    })
+            });
     }
 
     static async create_menu(req, res, next) {
@@ -59,37 +91,39 @@ class MenuController extends CoreController {
     };
 
     static async menus_get_all(req, res, next) {
-        MenuModel
-            .find().populate("products")
-            .select("name price products _id")
-            .exec()
-            .then(docs => {
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products'
+        ];
+
+        Promise.resolve()
+            .then(() => MenuDao.getAllMenus())
+            .then(menus => MenuController.read(menus, { fields }))
+            .then(menus => {
                 const response = {
-                    count: docs.length,
-                    menus: docs.map(doc => {
+                    count: menus.length,
+                    menus: menus.map(menu => {
                         return {
-                            name: doc.name,
-                            price: doc.price,
-                            products: doc.products,
-                            _id: doc._id,
+                            menu,
                             request: {
                                 type: 'GET',
-                                url: `${process.env.SERV_ADDRESS}/menu/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/menu/${menu._id}`
                             }
                         };
                     })
                 };
                 res.status(200).json(response);
-
-            }).catch(err =>{
+            }).catch(err => {
             res.status(400).json({
                 message: "Bad request",
                 err,
-            });
+            })
         });
     };
 
-    static async get_menu_by_id(req,res,next) {
+    /*static async get_menu_by_id(req,res,next) {
         const id = req.params.menuId;
         MenuController.menuNotExist(req,res,next,id);
         MenuModel
@@ -112,7 +146,7 @@ class MenuController extends CoreController {
                 err,
             });
         });
-    };
+    };*/
 
     static async modif_menu(req, res, next){
         const id = req.params.menuId;

@@ -1,7 +1,6 @@
 const PromotionDAO = require('../dao').PromotionDAO;
 const CoreController = require('./core.controller');
 const PromotionModel = require('../models').Promotion;
-// const MenuModel = require('../models').Menu;
 const mongoose = require('mongoose');
 
 class PromotionController extends CoreController {
