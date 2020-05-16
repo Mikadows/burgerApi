@@ -4,8 +4,15 @@ const ProductsController = Controllers.ProductController;
 const MenuController = Controllers.MenuController;
 const PromotionController = Controllers.PromotionController;
 const OrderController = Controllers.OrderController;
+const AuthMiddleware = require('../middlewares/auth.middleware');
 
 module.exports = function(app) {
+
+
+    /**
+     * Apply is admin middleware to all routes below
+     */
+    app.use(AuthMiddleware.isAdmin);
 
     /**
      * Product management
