@@ -5,18 +5,6 @@ const PromotionModel = require('../models').Promotion;
 const mongoose = require('mongoose');
 
 class PromotionController extends CoreController {
-
-    // static addPromotion(menus, products, percentReduction){
-    //     if ((!this.isEmpty(menus) || !this.isEmpty(products)) && percentReduction){
-    //         let promotion = {"menu":menus, "products":products, "percentReduction":percentReduction}
-    //         promotion = PromotionDAO.savePromotion(promotion);
-    //         return promotion;
-    //     } else {
-    //         throw new Error("Bad Request");
-    //         //return -1; //Bad request
-    //     }
-    // }
-
     /**
      * Add promotion
      * @param req
@@ -24,7 +12,7 @@ class PromotionController extends CoreController {
      * @param next
      * @returns {Promise<void>}
      */
-    static async addPromotion2(req, res, next){
+    static addPromotion(req, res, next){
         const data = req.body;
         const authorizedFields = ['name', 'menus','products', 'percentReduction', 'startDate', 'endDate'];
         Promise.resolve().then(() => {

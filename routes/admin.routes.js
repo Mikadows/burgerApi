@@ -50,7 +50,7 @@ module.exports = function(app) {
      * Promotions management
      */
 
-    app.post('/manage/promotion', bodyParser.json(), PromotionController.addPromotion2);
+    app.post('/manage/promotion', bodyParser.json(), PromotionController.addPromotion);
 
     app.put('/manage/promotion/:promotionId', bodyParser.json(),  PromotionController.modifyPromotion);
 
