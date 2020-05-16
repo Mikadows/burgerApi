@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 class Core {
     // -------------------------
     // We take a list of models in param and if necessary
@@ -6,29 +6,27 @@ class Core {
     // -------------------------
     static render(list, options = {}) {
         const isAlone = !Array.isArray(list);
-        // On s'arrange pour traiter une liste
+        // if we only have one elem we put it into an array to avoid error
         if (isAlone) list = [list];
         return (
             Promise.resolve()
                 .then(() => {
-                    // On regarde si on ne doit afficher que certains champs
+                    // We check if we have to render only few fields
                     if (options.fields) {
-                        // Si la liste des champs est une
-                        // chaine de caractère, on la découpe
+                        // if the fields si on One string like this : 'name price products' we split it
                         if (typeof options.fields === 'string')
                             options.fields = options.fields.split(' ');
-                        // On fait le tri des champs
+                        // we sort each non fields string
                         list = list.map(model => {
                             return this.filterFields(model.toObject(), options.fields)
                         })
                     }
-                    // On regarde si on doit gérer des populates
+                    // if options contain populate we populate the Data
                     if (options.populates) {
                         return this.getModel().populate(list, options.populates)
                     }
                     return list;
                 })
-                // On retourne le résultat attendu
                 .then(renderedList => (isAlone ? renderedList.pop() : renderedList))
         )
     }
@@ -38,6 +36,7 @@ class Core {
     static find(search, options = {}) {
         return (
             Promise.resolve()
+                // we avoid value: ['', null, 'null', undefined]
                 .then(() => this.cleanModelData(search))
                 .then(s =>
                     this.getModel()
@@ -54,13 +53,13 @@ class Core {
     static update(id, data, options = {}) {
         return (
             Promise.resolve()
-                // On ne garde que les champs qu'il est possible de modifier
+                // We check only fields authorizedFields
                 .then(() => this.filterFields(data, options.authorizedFields))
                 .then(filteredData =>
                     Promise.all([
-                        // On nettoie les données avant l'ajout en BDD
+                        // we avoid value: ['', null, 'null', undefined]
                         this.cleanModelData(filteredData),
-                        // On récupère le document
+                        // We get the document
                         typeof id === 'object'
                             ? this.getModel()
                                 .findOne(id)
@@ -75,13 +74,13 @@ class Core {
                         throw new Error(
                             `Unknow ${this.prototype.modelName} document ID ${id}`
                         );
-                    // Si pas de données à modifier, on retourne le model
+                    // If no data modify them return the model
                     if (!Object.keys(checkedData).length) return model;
-                    // On met les données à jour
+                    // We set the new data into the model
                     model.set(checkedData);
-                    // Pour être sûr, on indique le changement de chacune des données
+                    // Marks the path as having pending changes to write to the db
                     Object.keys(checkedData).forEach(key => model.markModified(key));
-                    // On lance la sauvegarde
+                    // We save the document
                     return model.save();
                 })
         )
@@ -95,9 +94,11 @@ class Core {
         return Promise.resolve()
             .then(() =>
                 {
+                    // We read all the Collection
                     if(typeof id === 'object' && id.length > 1) {
                         return this.getModel().find();
                     }
+                    // Only read One document
                     return typeof id === 'object'
                         ? this.getModel().findOne(id).exec()
                         : this.getModel().findById(id).exec()
@@ -115,11 +116,11 @@ class Core {
         if (Array.isArray(data)) return this.createMany(data, options);
         return (
             Promise.resolve()
-                // On filtre les données
+                // We avoid non authorizedFields
                 .then(() => this.filterFields(data, options.authorizedFields))
-                // On nettoie les données
+                // we avoid value: ['', null, 'null', undefined]
                 .then(filteredData => this.cleanModelData(filteredData))
-                // Création du document
+                // We create the new document
                 .then(checkedData => this.getModel().create(checkedData))
         )
     }
@@ -130,13 +131,13 @@ class Core {
     static createMany(list, options = {}) {
         return (
             Promise.resolve()
-                // On filtre les données
+                // We avoid non authorizedFields
                 .then(() =>
                     list.map(m => this.filterFields(m, options.authorizedFields))
                 )
-                // On nettoie les données
+                // we avoid value: ['', null, 'null', undefined]
                 .then(filteredList => filteredList.map(this.cleanModelData.bind(this)))
-                // Création du document
+                // We create the new document
                 .then(checkedList => this.getModel().insertMany(checkedList))
         );
     }
@@ -148,9 +149,9 @@ class Core {
         const result = {};
         const emptyValues = ['', null, 'null', undefined];
         Object.keys(data).forEach(key => {
-            // On exclue les valeurs vides
+            // We avoid null value to render
             if (emptyValues.includes(data[key])) return;
-            // On sauvegarde les données dans l'objet
+            // We save the data into the result Array
             result[key] = data[key];
         });
 
@@ -162,10 +163,9 @@ class Core {
     // -------------------------
     static filterFields(data, fields) {
         if (!fields) return data;
-        // On construit un nouvel objet qui ne
-        // va contenir que les données finale
+        // We create the filtered Element
         let filteredFields = {};
-        // On parcours les champs autorisés
+        // We only save fields value
         fields.forEach(key => {
             if (data[key] !== undefined) filteredFields[key] = data[key];
         });
@@ -179,6 +179,6 @@ class Core {
     }
 }
 
-// Nom du model associé au service
+// Model Name of the controller
 Core.prototype.modelName = 'Default';
 module.exports = Core;

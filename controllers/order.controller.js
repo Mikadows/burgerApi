@@ -8,10 +8,14 @@ let OrderDao = require('../dao').OrderDAO;
 let PromotionDao = require('../dao').PromotionDAO;
 let mongoose = require('mongoose');
 
-
-
 class OrderController extends CoreController {
 
+    /**
+     * Render populates models
+     * @param list
+     * @param options
+     * @returns {Promise<*>}
+     */
     static render(list,options = {}){
         const populates = [
             {path:'products'},
@@ -20,6 +24,13 @@ class OrderController extends CoreController {
         return super.render(list, { ...options,populates});
     }
 
+    /**
+     * Create Order and caculate the price to pay
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async create_order(req, res, next) {
         let data = req.body;
         const authorizedFields = ['products','menus', 'totalPrice'];
@@ -54,6 +65,13 @@ class OrderController extends CoreController {
             .catch(next);
     };
 
+    /**
+     * Render all Orders Done
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async orders_get_all(req, res, next) {
         OrderModel
             .find()
@@ -94,6 +112,14 @@ class OrderController extends CoreController {
         });
     };
 
+    /**
+     * Render Order by ID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
+    //TODO : function to link
     static async get_order_by_id(req,res,next) {
         const id = req.params.orderId;
         OrderController.orderNotExist(req,res,next,id);
@@ -119,6 +145,14 @@ class OrderController extends CoreController {
         });
     };
 
+    /**
+     * GetAll Order from one userID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
+    //TODO : function to create
     static async get_order_by_user_id(req,res,next) {
         const id = req.params.orderId;
         OrderController.orderNotExist(req,res,next,id);
@@ -144,8 +178,14 @@ class OrderController extends CoreController {
         });
     };
 
-
-
+    /**
+     * Check if Order Exists
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<Order>}
+     */
     static async orderNotExist(req,res,next,id){
         return Promise.resolve()
             .then(() => OrderDao.findById(id))
@@ -161,6 +201,11 @@ class OrderController extends CoreController {
     }
 
 
+    /**
+     * Calculate the price to pay
+     * @param data
+     * @returns {Promise<number>}
+     */
     static async getPriceObjectByQuantity(data){
             let totalPrice = 0;
 
@@ -198,7 +243,15 @@ class OrderController extends CoreController {
     }
 
 
-
+    /**
+     * Check if Quantity has been send in the Order
+     * @param req
+     * @param res
+     * @param next
+     * @param entityName
+     * @param entity
+     * @returns {Promise<void>}
+     */
     static async checkQuantity(req,res,next,entityName,entity){
         return Promise.resolve().then(() => {
             if (typeof entity.quantity === 'undefined') {

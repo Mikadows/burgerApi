@@ -5,6 +5,12 @@ let ProductController = require('./product.controller');
 let mongoose = require('mongoose');
 
 class MenuController extends CoreController {
+    /**
+     * Render populates models
+     * @param list
+     * @param options
+     * @returns {Promise<*>}
+     */
     static render(list,options = {}){
         const populates = [
             {
@@ -15,6 +21,13 @@ class MenuController extends CoreController {
         return super.render(list, { ...options,populates});
     }
 
+    /**
+     * Render Menu from id
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async get_menu_by_id(req, res, next){
         const id = req.params.menuId;
         await MenuController.menuNotExist(req,res,next,id);
@@ -44,6 +57,13 @@ class MenuController extends CoreController {
             });
     }
 
+    /**
+     * Create Menu that hasn't the same name
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async create_menu(req, res, next) {
         let data = req.body;
         const authorizedFields = ['name','price','products'];
@@ -89,6 +109,13 @@ class MenuController extends CoreController {
             .catch(next);
     };
 
+    /**
+     * Render All Menu
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async menus_get_all(req, res, next) {
         const fields = [
             '_id',
@@ -125,6 +152,13 @@ class MenuController extends CoreController {
         });
     };
 
+    /**
+     * Modif one Menu from ID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async modif_menu(req, res, next){
         const id = req.params.menuId;
         let data = req.body;
@@ -154,6 +188,13 @@ class MenuController extends CoreController {
             .catch(next);
     }
 
+    /**
+     * Delete Menu from his ID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async delete_menu(req,res,next){
         const id = req.params.menuId;
         Promise.resolve()
@@ -169,6 +210,13 @@ class MenuController extends CoreController {
             .catch(next);
     }
 
+    /**
+     * Remove products from Menu.products
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async delete_menu_product(req,res,next) {
         const id = req.params.menuId;
         let data = req.body;
@@ -214,6 +262,13 @@ class MenuController extends CoreController {
             .catch(next);
     }
 
+    /**
+     * Add products to Menu.products
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async add_product(req,res,next){
         const id = req.params.menuId;
         let data = req.body;
@@ -241,6 +296,14 @@ class MenuController extends CoreController {
             .catch(next);
     }
 
+    /**
+     * Check if Menu Exists
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<Menu>}
+     */
     static async menuNotExist(req,res,next,id){
         return Promise.resolve()
             .then(() => MenuDao.findById(id))
@@ -255,6 +318,14 @@ class MenuController extends CoreController {
             });
     }
 
+    /**
+     * Avoid same Name and ID Menu
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<void>}
+     */
     static async menuNameNotSameIdAlreadyExist(req,res,next,id) {
         Promise.resolve().then(() => MenuDao
             .find( {$and:[{"_id":{$ne:id}},{"name": {$eq:req.body.name}}]}
@@ -270,6 +341,7 @@ class MenuController extends CoreController {
     }
 }
 
+// We tell him the name of the model to go load
 MenuController.prototype.modelName = 'Menu';
 module.exports = MenuController;
 
