@@ -47,7 +47,7 @@ class ProductController extends CoreController {
                             _id: doc._id,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/product/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/product/${doc._id}`
                             }
                         };
                     })
@@ -76,7 +76,7 @@ class ProductController extends CoreController {
                         product: doc,
                         request: {
                             type: 'GET',
-                            url: `http://localhost:3000/products`,
+                            url: `${process.env.SERV_ADDRESS}/products`,
                         }
                     });
                 }
@@ -104,7 +104,7 @@ class ProductController extends CoreController {
                 product,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/product/${id}`
+                    url: `${process.env.SERV_ADDRESS}/product/${id}`
                 }
             }))
             .catch(next);

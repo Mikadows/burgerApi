@@ -95,7 +95,7 @@ class PromotionController extends CoreController {
                 product,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/promotion/${id}`
+                    url: `${process.env.SERV_ADDRESS}/promotion/${id}`
                 }
             }))
             .catch(next);
@@ -134,7 +134,7 @@ class PromotionController extends CoreController {
                             percentReduction: doc.percentReduction,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/promotion/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/promotion/${doc._id}`
                             }
                         };
                     })

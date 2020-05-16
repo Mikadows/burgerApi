@@ -75,7 +75,7 @@ class MenuController extends CoreController {
                             _id: doc._id,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/menu/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/menu/${doc._id}`
                             }
                         };
                     })
@@ -103,7 +103,7 @@ class MenuController extends CoreController {
                         menu: doc,
                         request: {
                             type: 'GET',
-                            url: `http://localhost:3000/menus`,
+                            url: `${process.env.SERV_ADDRESS}/menus`,
                         }
                     });
                 }
@@ -138,7 +138,7 @@ class MenuController extends CoreController {
                 menu,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/menu/${id}`
+                    url: `${process.env.SERV_ADDRESS}/menu/${id}`
                 }
             }))
             .catch(next);
@@ -198,7 +198,7 @@ class MenuController extends CoreController {
                 menu,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/menu/${id}`
+                    url: `${process.env.SERV_ADDRESS}/menu/${id}`
                 }
             }))
             .catch(next);
@@ -225,7 +225,7 @@ class MenuController extends CoreController {
                 menu,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/menu/${id}`
+                    url: `${process.env.SERV_ADDRESS}/menu/${id}`
                 }
             }))
             .catch(next);

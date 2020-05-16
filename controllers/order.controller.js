@@ -79,7 +79,7 @@ class OrderController extends CoreController {
                             _id: doc._id,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/order/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/order/${doc._id}`
                             }
                         };
                     })
@@ -107,7 +107,7 @@ class OrderController extends CoreController {
                         order: doc,
                         request: {
                             type: 'GET',
-                            url: `http://localhost:3000/orders`,
+                            url: `${process.env.SERV_ADDRESS}/orders`,
                         }
                     });
                 }
@@ -132,7 +132,7 @@ class OrderController extends CoreController {
                         order: doc,
                         request: {
                             type: 'GET',
-                            url: `http://localhost:3000/orders`,
+                            url: `${process.env.SERV_ADDRESS}/orders`,
                         }
                     });
                 }
