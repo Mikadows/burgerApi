@@ -6,6 +6,7 @@ let mongoose = require('mongoose');
 
 class MenuController extends CoreController {
 
+
     static render(list,options = {}){
         const populates = [
             {path:'products'}

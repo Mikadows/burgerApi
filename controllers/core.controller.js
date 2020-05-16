@@ -1,43 +1,28 @@
 const mongoose = require('mongoose')
 class Core {
     // -------------------------
-    // Prend une liste de models en paramètre et
-    // applique si nécessaire les populate ou autre
-    // opération de cosmétiques sur les données
+    // We take a list of models in param and if necessary
+    // apply populate on it to render correctly
     // -------------------------
     static render(list, options = {}) {
         const isAlone = !Array.isArray(list);
         // On s'arrange pour traiter une liste
         if (isAlone) list = [list];
-        console.log('avant return')
         return (
             Promise.resolve()
                 .then(() => {
-                    // On regarde si on ne doit afficher que certains champs
-                    if (options.fields) {
-                        // Si la liste des champs est une
-                        // chaine de caractère, on la découpe
-                        if (typeof options.fields === 'string')
-                            options.fields = options.fields.split(' ');
-                        // On fait le tri des champs
-                        list = list.map(model => {
-                            return this.filterFields(model.toObject(), options.fields)
-                        })
-                    }
                     // On regarde si on doit gérer des populates
                     if (options.populates) {
-                        return this.getModel().populate(list, options.populates)
+                        return this.getModel().populate(list, options.populates);
                     }
-                    console.log(list);
-                    console.log('toto');
-                    return list
+                    return list;
                 })
                 // On retourne le résultat attendu
                 .then(renderedList => (isAlone ? renderedList.pop() : renderedList))
         )
     }
     // -------------------------
-    // Lance une recherche sur les documents
+    // Start a find on documents
     // -------------------------
     static find(search, options = {}) {
         return (
@@ -49,11 +34,11 @@ class Core {
                         .sort(options.order || 'created_at')
                         .exec()
                 )
-        )
+        );
     }
 
     // -------------------------
-    // Méthode de mise à jour d'un document
+    // Update a document by his ID
     // -------------------------
     static update(id, data, options = {}) {
         return (
@@ -92,10 +77,10 @@ class Core {
     }
 
     // -------------------------
-    // Processus de création d'un nouveau model
+    // Create a new document in collections
     // -------------------------
     static create(data, options = {}) {
-        if (Array.isArray(data)) return this.createMany(data, options)
+        if (Array.isArray(data)) return this.createMany(data, options);
         return (
             Promise.resolve()
                 // On filtre les données
@@ -108,7 +93,7 @@ class Core {
     }
 
     // -------------------------
-    // Processus de création de plusieurs nouveaux models
+    // Create a lot of new documents in collections
     // -------------------------
     static createMany(list, options = {}) {
         return (
@@ -121,10 +106,11 @@ class Core {
                 .then(filteredList => filteredList.map(this.cleanModelData.bind(this)))
                 // Création du document
                 .then(checkedList => this.getModel().insertMany(checkedList))
-        )
+        );
     }
     // -------------------------
-    // Nettoie les données passées en paramètre
+    // Clean data pass in param by removing
+    // example: {key: xxx, value: null}
     // -------------------------
     static cleanModelData(data) {
         const result = {};
@@ -136,11 +122,11 @@ class Core {
             result[key] = data[key];
         });
 
-        return result
+        return result;
     }
     // -------------------------
-    // Filtre un objet de données pour
-    // ne garder que les champs listés
+    // Use a filter that as been declare in the object with authorizedFields
+    // and only save data that's in it
     // -------------------------
     static filterFields(data, fields) {
         if (!fields) return data;
@@ -149,15 +135,15 @@ class Core {
         let filteredFields = {};
         // On parcours les champs autorisés
         fields.forEach(key => {
-            if (data[key] !== undefined) filteredFields[key] = data[key]
+            if (data[key] !== undefined) filteredFields[key] = data[key];
         });
-        return filteredFields
+        return filteredFields;
     }
     // -------------------------
-    // Retourne le model mongoose associé
+    // Return the model from mongoose with a string that's as been load in memory of mongoose
     // -------------------------
     static getModel() {
-        return mongoose.model(this.prototype.modelName)
+        return mongoose.model(this.prototype.modelName);
     }
 }
 
