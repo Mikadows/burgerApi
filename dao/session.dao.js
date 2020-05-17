@@ -1,5 +1,6 @@
 'use strict';
 const Session = require('../models').Session;
+const UserDao = require('./user.dao');
 
 class SessionDao {
 
@@ -19,6 +20,13 @@ class SessionDao {
     }
 
     /**
+     * @returns {Promise<Product[]>}
+     */
+    static async find(json){
+        return Session.find(json).exec();
+    }
+
+    /**
      * @param id {string}
      * @returns {Promise<Session|undefined>}
      */
@@ -35,6 +43,68 @@ class SessionDao {
             if (err) return false;
         });
         return true;
+    }
+
+    /**
+     *
+     * @param idToken
+     * @returns {boolean}
+     */
+    static async tokenIsValid(idToken){
+        let SessionExist = await SessionDao.find({$and:[{token: idToken},{deletedAt:{$exists: false}}]});
+        if(Array.isArray(SessionExist) && SessionExist.length) return true;
+        else return false;
+    }
+
+    /**
+     * Check if the the token belongs to an admin
+     * @param idToken
+     * @returns {Promise<boolean|*>}
+     * @constructor
+     */
+    static async UserIsAdmin(idToken) {
+        let SessionUser = await Session.findOne({token: idToken}).exec();
+        if (SessionUser.user) {
+
+            let TrueFalse = await UserDao.isAdmin(SessionUser.user);
+            return TrueFalse;
+        }
+        return false;
+    }
+
+    /**
+     * Check if the token belongs to an admin or preparer
+     * @param idToken
+     * @returns {Promise<boolean|*>}
+     */
+    static async userIsPreparerOrAdmin(idToken) {
+        let SessionUser = await Session.findOne({token: idToken}).exec();
+        if (SessionUser.user) {
+
+            let TrueFalse = await UserDao.isPreparerOrAdmin(SessionUser.user);
+            return TrueFalse;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @param tok
+     * @returns {Promise<*>}
+     */
+    static async deleteByToken(tok) {
+        const isTokenExist = await Session.findOne({token: tok});
+
+        if (isTokenExist) {
+            return Session.findOneAndUpdate({token: tok}, {
+                deletedAt: Date.now()
+            }, {
+                new: true //To return model after update
+            });
+
+        } else {
+            return undefined;
+        }
     }
 
     /**

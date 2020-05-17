@@ -1,28 +1,67 @@
-let OrderModel = require('../models').Order;
 let ProductModel = require('../models').Product;
 let MenuModel = require('../models').Menu;
+let SessionModel = require('../models').Session;
+
 let CoreController = require('./core.controller');
 let ProductController = require('./product.controller');
 let MenuController = require('./menu.controller');
+let UserController = require('./user.controller');
+
 let OrderDao = require('../dao').OrderDAO;
 let PromotionDao = require('../dao').PromotionDAO;
+let SessionDao = require('../dao').SessionDAO;
 let mongoose = require('mongoose');
-
-
 
 class OrderController extends CoreController {
 
+    /**
+     * Render populates models
+     * @param list
+     * @param options
+     * @returns {Promise<*>}
+     */
     static render(list,options = {}){
         const populates = [
-            {path:'products'},
-            {path:'menus'}
+            {path:'products',
+                select: 'name price'
+
+            },
+            {path:'menus',
+            select: 'products name price',
+                populate: {
+                    path: 'products',
+                    model: 'Product',
+                    select:'name price'
+                }
+            },
+
         ];
         return super.render(list, { ...options,populates});
     }
 
+    /**
+     * Create Order and caculate the price to pay
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async create_order(req, res, next) {
         let data = req.body;
-        const authorizedFields = ['products','menus', 'totalPrice'];
+        let idToken = req.headers['x-access-token'] || false;
+
+        if(!await SessionDao.tokenIsValid(idToken)) {
+            res.status(401).json({
+                status: 401,
+                message:"Your Session is not active anymore or doesn't exist, Unauthorized"
+            }).end();
+            throw new Error("Your Session is not active anymore or doesn't exist, Unauthorized");
+        }
+
+        let SessionUser = await SessionModel.findOne({token: idToken}).exec();
+        data.user = SessionUser.user;
+
+        const authorizedFields = ['products','menus', 'totalPrice','user'];
         Promise.resolve()
             .then(() => {
                 const promiseAll = [];
@@ -50,106 +89,187 @@ class OrderController extends CoreController {
             })
             .then( () => OrderController.create(data, {authorizedFields}))
             .then( order => OrderController.render(order))
-            .then( order => res.json(order))
+            .then( order => res.status(201).json(order))
             .catch(next);
     };
 
+    /**
+     * Render all Orders Done
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async orders_get_all(req, res, next) {
-        OrderModel
-            .find()
-            .populate({
-            path: 'menus',
-            model: 'Menu',
-            populate: {
-                path: 'products',
-                model: 'Product'
-                }
+        const fields = [
+            '_id',
+            'products',
+            'menus',
+            'user',
+            'quantity',
+            'name',
+            'price',
+            'totalPrice'
+        ];
+
+        Promise.resolve()
+            .then(async () =>  {
+                return OrderDao.getAllOrders()
             })
-            .populate('products')
-            .select("totalPrice products menus _id")
-            .exec()
-            .then(docs => {
+            .then(orders => OrderController.read(orders, { fields },true))
+            .then(orders => {
                 const response = {
-                    count: docs.length,
-                    orders: docs.map(doc => {
+                    count: orders.length,
+                    menus: orders.map(orders => {
                         return {
-                            totalPrice: doc.totalPrice,
-                            products: doc.products,
-                            menus: doc.menus,
-                            _id: doc._id,
+                            orders,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/order/${doc._id}`
+                                headers:{ "x-access-token": "YourToken" },
+                                url: `${process.env.SERV_ADDRESS}/preparer/order/${orders._id}`
                             }
                         };
                     })
                 };
+                if(response.count === 0){
+                    res.status(204).end();
+                }
                 res.status(200).json(response);
-
-            }).catch(err =>{
+            }).catch(err => {
             res.status(400).json({
                 message: "Bad request",
                 err,
-            });
+            })
         });
     };
 
+    /**
+     * Render Order by ID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
+    //TODO : function to link
     static async get_order_by_id(req,res,next) {
         const id = req.params.orderId;
-        OrderController.orderNotExist(req,res,next,id);
-        OrderModel
-            .findById(id)
-            .select('name price products _id')
-            .exec()
-            .then(doc => {
-                if(doc){
-                    res.status(200).json({
-                        order: doc,
-                        request: {
-                            type: 'GET',
-                            url: `http://localhost:3000/orders`,
-                        }
-                    });
-                }
-            }).catch(err => {
-            res.status(400).json({
-                message: "Bad request",
+        await OrderController.orderNotExist(req,res,next,id);
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products',
+            'menus',
+            'totalPrice'
+        ];
+
+        Promise.resolve()
+            .then(() => OrderDao.findById(id))
+            .then(order => OrderController.read(order, { fields }))
+            .then(order => {
+                return res.json({
+                    order,
+                    request: {
+                        type: 'GET',
+                        headers:{ "x-access-token": "YourToken" },
+                        url: `${process.env.SERV_ADDRESS}/preparer/order/${order._id}`
+                    }
+                })}
+            ).catch(err => {
+            res.status(500).json({
+                message: "Internal Server Error",
                 err,
-            });
+            })
         });
     };
 
+    /**
+     * GetAll Order from one userID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async get_order_by_user_id(req,res,next) {
-        const id = req.params.orderId;
-        OrderController.orderNotExist(req,res,next,id);
-        OrderModel
-            .findById(id)
-            .select('name price products _id')
-            .exec()
-            .then(doc => {
-                if(doc){
-                    res.status(200).json({
-                        order: doc,
-                        request: {
-                            type: 'GET',
-                            url: `http://localhost:3000/orders`,
-                        }
-                    });
+        const id = req.params.userId;
+        await UserController.userNotExist(req, res, next, id);
+        let idToken = req.headers['x-access-token'] || false;
+
+        // check if the session is a valid token
+        if(!await SessionDao.tokenIsValid(idToken)) {
+            res.status(401).json({
+                status: 401,
+                message:"Your Session is not active anymore or doesn't exist, Unauthorized"
+            }).end();
+            throw new Error("Your Session is not active anymore or doesn't exist, Unauthorized");
+        }
+        let valid = null;
+        let SessionUser = await SessionModel.findOne({token: idToken}).exec();
+        // check if this user is a preparerOrAdmin
+        if(await SessionDao.userIsPreparerOrAdmin(idToken)) valid = true;
+
+        if(!valid) {
+            // Cast id and SessionUser.user into string
+            if(''+id !== ''+SessionUser.user) {
+                res.status(401).json({
+                    status: 401,
+                    message:"You cannot see Orders of other user if you are not admin or preparer"
+                }).end();
+                throw new Error("You cannot see Orders of other user if you are not admin or preparer");
+            }
+        }
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products',
+            'menus',
+            'totalPrice'
+        ];
+
+        // Render the result
+        return Promise.resolve()
+            .then(() =>  OrderDao.find({user: id}))
+            .then(orders => OrderController.read(orders, { fields }, true))
+            .then(orders => {
+                const response = {
+                    count: orders.length,
+                    menus: orders.map(order => {
+                        return {
+                            order,
+                            request: {
+                                type: 'GET',
+                                headers:{ "x-access-token": "YourToken" },
+                                url: `${process.env.SERV_ADDRESS}/preparer/order/${order._id}`
+                            }
+                        };
+                    })
+                };
+                if(response.count === 0){
+                    res.status(204).end();
                 }
+                res.status(200).json(response);
             }).catch(err => {
             res.status(400).json({
                 message: "Bad request",
                 err,
-            });
+            })
         });
     };
 
-
-
+    /**
+     * Check if Order Exists
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<Order>}
+     */
     static async orderNotExist(req,res,next,id){
         return Promise.resolve()
             .then(() => OrderDao.findById(id))
             .then(order =>{
+                console.log(id);
                 if(!order){
                     res.status(404).json({
                         message: "This order doesn't exist"
@@ -161,6 +281,11 @@ class OrderController extends CoreController {
     }
 
 
+    /**
+     * Calculate the price to pay
+     * @param data
+     * @returns {Promise<number>}
+     */
     static async getPriceObjectByQuantity(data){
             let totalPrice = 0;
 
@@ -198,7 +323,15 @@ class OrderController extends CoreController {
     }
 
 
-
+    /**
+     * Check if Quantity has been send in the Order
+     * @param req
+     * @param res
+     * @param next
+     * @param entityName
+     * @param entity
+     * @returns {Promise<void>}
+     */
     static async checkQuantity(req,res,next,entityName,entity){
         return Promise.resolve().then(() => {
             if (typeof entity.quantity === 'undefined') {

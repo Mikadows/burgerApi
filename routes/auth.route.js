@@ -1,22 +1,21 @@
 const bodyParser = require('body-parser');
+const UserController = require('../controllers').UserController;
+
 
 module.exports = function(app) {
 
-    app.post('/auth/subscribe', bodyParser.json(), async (req, res) => {
-        res.status(501).end();
-    });
+    /**
+     * Authentication routes
+     */
 
-    app.post('/auth/login', bodyParser.json(), async (req, res) => {
-        res.status(501).end();
-    });
+    app.post('/auth/subscribe', bodyParser.json(), UserController.subscribe);
 
-    app.delete('/auth/logout', async (req, res) => {
-        res.status(501).end();
-    });
+    app.post('/auth/login', bodyParser.json(), UserController.login);
 
     app.get('/', async (req, res) => {
-       res.status(200).json({ message: "Hello"});
+       res.status(200).json({ message: "Welcome to BurgerAPI"});
     });
 
+    app.delete('/auth/logout/:token',  UserController.logout);
 
 };

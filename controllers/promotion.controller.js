@@ -1,22 +1,9 @@
 const PromotionDAO = require('../dao').PromotionDAO;
 const CoreController = require('./core.controller');
 const PromotionModel = require('../models').Promotion;
-// const MenuModel = require('../models').Menu;
 const mongoose = require('mongoose');
 
 class PromotionController extends CoreController {
-
-    // static addPromotion(menus, products, percentReduction){
-    //     if ((!this.isEmpty(menus) || !this.isEmpty(products)) && percentReduction){
-    //         let promotion = {"menu":menus, "products":products, "percentReduction":percentReduction}
-    //         promotion = PromotionDAO.savePromotion(promotion);
-    //         return promotion;
-    //     } else {
-    //         throw new Error("Bad Request");
-    //         //return -1; //Bad request
-    //     }
-    // }
-
     /**
      * Add promotion
      * @param req
@@ -24,7 +11,7 @@ class PromotionController extends CoreController {
      * @param next
      * @returns {Promise<void>}
      */
-    static async addPromotion2(req, res, next){
+    static addPromotion(req, res, next){
         const data = req.body;
         const authorizedFields = ['name', 'menus','products', 'percentReduction', 'startDate', 'endDate'];
         Promise.resolve().then(() => {
@@ -47,7 +34,7 @@ class PromotionController extends CoreController {
                 return PromotionController.create(data, {authorizedFields});
             })
             .then(promotion => PromotionController.render(promotion))
-            .then(promotion => res.json(promotion))
+            .then(promotion => res.status(201).json(promotion))
             .catch(next);
     }
 
@@ -91,25 +78,15 @@ class PromotionController extends CoreController {
                 return promotion.save();
             })
             .then(product => PromotionController.render(product))
-            .then(product => res.json({
+            .then(product => res.status(200).json({
                 product,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/promotion/${id}`
+                    url: `${process.env.SERV_ADDRESS}/promotion/${id}`
                 }
             }))
             .catch(next);
     }
-
-    /**
-     * Get all promotions
-     */
-    // static getAll(){
-    //     const promotions = PromotionDAO.getAllPromotions();
-    //
-    //     console.log(JSON.stringify(promotions))
-    //     return promotions;
-    // }
 
     /**
      * Get All promotions
@@ -144,17 +121,15 @@ class PromotionController extends CoreController {
                             percentReduction: doc.percentReduction,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/promotion/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/promotion/${doc._id}`
                             }
                         };
                     })
                 };
                 if(response.count === 0){
                     res.status(204).end();
-                } else {
-                    res.status(200).json(response);
                 }
-
+                res.status(200).json(response);
             }).catch(err =>{
             res.status(400).json({
                 message: "Bad request",
@@ -221,7 +196,7 @@ class PromotionController extends CoreController {
         return Promise.resolve().then(() => PromotionDAO.findById(id))
             .then(product =>{
                 if(!product){
-                    res.status(409).json({
+                    res.status(404).json({
                         message: `The promotion ${id} doesn't exist`
                     }).end();
                     throw new Error(`The promotion ${id} doesn't exist`);

@@ -24,7 +24,7 @@ class MenuDao {
      * @returns {Promise<Menu[]>}
      */
     static async getAllMenus() {
-        return Menu.find().populate('products');
+        return Menu.find();
     }
 
     /**

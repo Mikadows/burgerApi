@@ -13,7 +13,11 @@ const orderSchema = new Schema({
     menus: [{
         type: Schema.Types.ObjectId,
         ref: 'Menu'
-    }]
+    }],
+    user:{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }
 });
 
 module.exports = mongoose.model('Order', orderSchema);

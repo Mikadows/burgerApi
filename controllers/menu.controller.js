@@ -5,14 +5,65 @@ let ProductController = require('./product.controller');
 let mongoose = require('mongoose');
 
 class MenuController extends CoreController {
-
+    /**
+     * Render populates models
+     * @param list
+     * @param options
+     * @returns {Promise<*>}
+     */
     static render(list,options = {}){
         const populates = [
-            {path:'products'}
+            {
+                path:'products',
+                select: 'name price'
+            }
         ];
         return super.render(list, { ...options,populates});
     }
 
+    /**
+     * Render Menu from id
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
+    static async get_menu_by_id(req, res, next){
+        const id = req.params.menuId;
+        await MenuController.menuNotExist(req,res,next,id);
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products'
+        ];
+
+        Promise.resolve()
+            .then(() => MenuDao.findById(id))
+            .then(menu => MenuController.read(menu, { fields }))
+            .then(menu => {
+                return res.json({
+                    menu,
+                    request: {
+                        type: 'GET',
+                        url: `${process.env.SERV_ADDRESS}/menu/${menu._id}`
+                    }
+                })}
+            ).catch(err => {
+                    res.status(500).json({
+                        message: "Internal Server Error",
+                        err,
+                    })
+            });
+    }
+
+    /**
+     * Create Menu that hasn't the same name
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async create_menu(req, res, next) {
         let data = req.body;
         const authorizedFields = ['name','price','products'];
@@ -44,7 +95,6 @@ class MenuController extends CoreController {
                 throw new Error("This menu need 2 products to be create");
             }
 
-
                 const promiseAll = [];
 
                 data.products.forEach((elem, i)=>{
@@ -55,66 +105,60 @@ class MenuController extends CoreController {
             })
             .then(() => MenuController.create(data, {authorizedFields}))
             .then(menu => MenuController.render(menu))
-            .then(menu => res.json(menu))
+            .then(menu => res.status(201).json(menu))
             .catch(next);
     };
 
+    /**
+     * Render All Menu
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async menus_get_all(req, res, next) {
-        MenuModel
-            .find().populate("products")
-            .select("name price products _id")
-            .exec()
-            .then(docs => {
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products'
+        ];
+
+        Promise.resolve()
+            .then(() => MenuDao.getAllMenus())
+            .then(menus => MenuController.read(menus, { fields },true))
+            .then(menus => {
                 const response = {
-                    count: docs.length,
-                    menus: docs.map(doc => {
+                    count: menus.length,
+                    menus: menus.map(menu => {
                         return {
-                            name: doc.name,
-                            price: doc.price,
-                            products: doc.products,
-                            _id: doc._id,
+                            menu,
                             request: {
                                 type: 'GET',
-                                url: `http://localhost:3000/menu/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/menu/${menu._id}`
                             }
                         };
                     })
                 };
-                res.status(200).json(response);
-
-            }).catch(err =>{
-            res.status(400).json({
-                message: "Bad request",
-                err,
-            });
-        });
-    };
-
-    static async get_menu_by_id(req,res,next) {
-        const id = req.params.menuId;
-        MenuController.menuNotExist(req,res,next,id);
-        MenuModel
-            .findById(id).populate("products")
-            .select('name price products _id')
-            .exec()
-            .then(doc => {
-                if(doc){
-                    res.status(200).json({
-                        menu: doc,
-                        request: {
-                            type: 'GET',
-                            url: `http://localhost:3000/menus`,
-                        }
-                    });
+                if(response.count === 0){
+                    res.status(204).end();
                 }
+                res.status(200).json(response);
             }).catch(err => {
             res.status(400).json({
                 message: "Bad request",
                 err,
-            });
+            })
         });
     };
 
+    /**
+     * Modif one Menu from ID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async modif_menu(req, res, next){
         const id = req.params.menuId;
         let data = req.body;
@@ -134,16 +178,23 @@ class MenuController extends CoreController {
                 return menu.save();
             })
             .then(menu => MenuController.render(menu))
-            .then(menu => res.json({
+            .then(menu => res.status(200).json({
                 menu,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/menu/${id}`
+                    url: `${process.env.SERV_ADDRESS}/menu/${id}`
                 }
             }))
             .catch(next);
     }
 
+    /**
+     * Delete Menu from his ID
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async delete_menu(req,res,next){
         const id = req.params.menuId;
         Promise.resolve()
@@ -159,6 +210,13 @@ class MenuController extends CoreController {
             .catch(next);
     }
 
+    /**
+     * Remove products from Menu.products
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async delete_menu_product(req,res,next) {
         const id = req.params.menuId;
         let data = req.body;
@@ -198,12 +256,19 @@ class MenuController extends CoreController {
                 menu,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/menu/${id}`
+                    url: `${process.env.SERV_ADDRESS}/menu/${id}`
                 }
             }))
             .catch(next);
     }
 
+    /**
+     * Add products to Menu.products
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async add_product(req,res,next){
         const id = req.params.menuId;
         let data = req.body;
@@ -225,12 +290,20 @@ class MenuController extends CoreController {
                 menu,
                 request: {
                     type: 'GET',
-                    url: `http://localhost:3000/menu/${id}`
+                    url: `${process.env.SERV_ADDRESS}/menu/${id}`
                 }
             }))
             .catch(next);
     }
 
+    /**
+     * Check if Menu Exists
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<Menu>}
+     */
     static async menuNotExist(req,res,next,id){
         return Promise.resolve()
             .then(() => MenuDao.findById(id))
@@ -245,6 +318,14 @@ class MenuController extends CoreController {
             });
     }
 
+    /**
+     * Avoid same Name and ID Menu
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<void>}
+     */
     static async menuNameNotSameIdAlreadyExist(req,res,next,id) {
         Promise.resolve().then(() => MenuDao
             .find( {$and:[{"_id":{$ne:id}},{"name": {$eq:req.body.name}}]}
@@ -260,6 +341,7 @@ class MenuController extends CoreController {
     }
 }
 
+// We tell him the name of the model to go load
 MenuController.prototype.modelName = 'Menu';
 module.exports = MenuController;
 

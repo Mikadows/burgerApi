@@ -1,138 +1,65 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 class Core {
     // -------------------------
-    // Prend les paramètres de recherche et les traite
-    // pour qu'ils soient compréhensibles pour mongoDB
-    // -------------------------
-    static paramize(params) {
-        return params
-    }
-    // -------------------------
-    // Vérifie les données passées en paramètre pour
-    // contrôler qu'elles correspondent bien au model du service
-    // -------------------------
-    static checkData(data) {
-        return data
-    }
-    // -------------------------
-    // Prend une liste de models en paramètre et
-    // applique si nécessaire les populate ou autre
-    // opération de cosmétiques sur les données
+    // We take a list of models in param and if necessary
+    // apply populate on it to render correctly
     // -------------------------
     static render(list, options = {}) {
         const isAlone = !Array.isArray(list);
-        // On s'arrange pour traiter une liste
+        // if we only have one elem we put it into an array to avoid error
         if (isAlone) list = [list];
         return (
             Promise.resolve()
                 .then(() => {
-                    // On regarde si on ne doit afficher que certains champs
+                    // We check if we have to render only few fields
                     if (options.fields) {
-                        // Si la liste des champs est une
-                        // chaine de caractère, on la découpe
+                        // if the fields si on One string like this : 'name price products' we split it
                         if (typeof options.fields === 'string')
                             options.fields = options.fields.split(' ');
-                        // On fait le tri des champs
+                        // we sort each non fields string
                         list = list.map(model => {
                             return this.filterFields(model.toObject(), options.fields)
                         })
                     }
-                    // On regarde si on doit gérer des populates
+                    // if options contain populate we populate the Data
                     if (options.populates) {
                         return this.getModel().populate(list, options.populates)
                     }
-                    return list
+                    return list;
                 })
-                // On retourne le résultat attendu
                 .then(renderedList => (isAlone ? renderedList.pop() : renderedList))
         )
     }
     // -------------------------
-    // Lance une recherche sur les documents
+    // Start a find on documents
     // -------------------------
     static find(search, options = {}) {
-        // On récupère la limite si il y en a une
-        let limit = options.limit || 300
-        if (!options.force && limit > 300) limit = 300;
         return (
             Promise.resolve()
+                // we avoid value: ['', null, 'null', undefined]
                 .then(() => this.cleanModelData(search))
-                // On construit l'objet de recherche
-                .then(s => this.paramize(s))
                 .then(s =>
                     this.getModel()
                         .find(s)
-                        // On limite toujours le nombre de résultats
-                        .limit(limit)
-                        .sort(options.order || '-created_at')
+                        .sort(options.order || 'created_at')
                         .exec()
                 )
-        )
-    }
-    // -------------------------
-    // Retourne le render d'un document
-    // Note : "id" peut être un ID ou un
-    // objet de recherche
-    // -------------------------
-    static read(id, options = {}) {
-        return Promise.resolve()
-            .then(() =>
-                typeof id === 'object'
-                    ? this.getModel()
-                        .findOne(id)
-                        .exec()
-                    : this.getModel()
-                        .findById(id)
-                        .exec()
-            )
-            .then(model => {
-                if (!model) {
-                    throw new Error(`Unknow item ${id}`)
-                }
-                return this.render(model, options)
-            })
-    }
-    // -------------------------
-    // Supprime un ou des documents
-    // -------------------------
-    static remove(id) {
-        return Promise.resolve().then(() =>
-            typeof id === 'object'
-                ? // On lance la suppression des documents
-                this.getModel()
-                    // On recherche la liste à supprimer
-                    .find(id, '_id')
-                    .then(list =>
-                        Promise.all([
-                            // On récupère les ID des documents
-                            list.map(l => l.get('id')),
-                            // On supprime avec la recherche
-                            this.getModel().deleteMany(id),
-                        ])
-                    )
-                    // On retourne la liste des ID supprimés
-                    .then(([ids]) => ids)
-                : // On supprime le document
-                this.getModel()
-                    .findOneAndDelete({ _id: id })
-                    .exec()
-                    .then(() => id)
-        )
+        );
     }
 
     // -------------------------
-    // Méthode de mise à jour d'un document
+    // Update a document by his ID
     // -------------------------
     static update(id, data, options = {}) {
         return (
             Promise.resolve()
-                // On ne garde que les champs qu'il est possible de modifier
+                // We check only fields authorizedFields
                 .then(() => this.filterFields(data, options.authorizedFields))
                 .then(filteredData =>
                     Promise.all([
-                        // On nettoie les données avant l'ajout en BDD
+                        // we avoid value: ['', null, 'null', undefined]
                         this.cleanModelData(filteredData),
-                        // On récupère le document
+                        // We get the document
                         typeof id === 'object'
                             ? this.getModel()
                                 .findOne(id)
@@ -142,140 +69,115 @@ class Core {
                                 .exec(),
                     ])
                 )
-                .then(([cleanedData, model]) =>
-                    Promise.all([model, this.checkData(cleanedData)])
-                )
                 .then(([model, checkedData]) => {
                     if (!model)
                         throw new Error(
                             `Unknow ${this.prototype.modelName} document ID ${id}`
                         );
-                    // Si pas de données à modifier, on retourne le model
+                    // If no data modify them return the model
                     if (!Object.keys(checkedData).length) return model;
-                    // On met les données à jour
+                    // We set the new data into the model
                     model.set(checkedData);
-                    // Pour être sûr, on indique le changement de chacune des données
+                    // Marks the path as having pending changes to write to the db
                     Object.keys(checkedData).forEach(key => model.markModified(key));
-                    // On lance la sauvegarde
+                    // We save the document
                     return model.save();
                 })
         )
     }
 
     // -------------------------
-    // Processus de création d'un nouveau model
+    // Return the render of a documents
+    // id can be a document or an ID
+    // -------------------------
+    static read(id, options = {}, getEnough) {
+        return Promise.resolve()
+            .then(() =>
+                {
+                    if(getEnough){
+                        return id
+                    }
+                    // Only read One document
+                    return typeof id === 'object'
+                        ? this.getModel().findOne(id).exec()
+                        : this.getModel().findById(id).exec()
+                }
+            )
+            .then((model) => {
+                return this.render(model, options)
+            })
+    }
+
+    // -------------------------
+    // Create a new document in collections
     // -------------------------
     static create(data, options = {}) {
-        if (Array.isArray(data)) return this.createMany(data, options)
+        if (Array.isArray(data)) return this.createMany(data, options);
         return (
             Promise.resolve()
-                // On filtre les données
+                // We avoid non authorizedFields
                 .then(() => this.filterFields(data, options.authorizedFields))
-                // On nettoie les données
+                // we avoid value: ['', null, 'null', undefined]
                 .then(filteredData => this.cleanModelData(filteredData))
-                // On vérifie les données
-                .then(cleanedData => this.checkData(cleanedData))
-                // Création du document
+                // We create the new document
                 .then(checkedData => this.getModel().create(checkedData))
         )
     }
 
     // -------------------------
-    // Processus de création de plusieurs nouveaux models
+    // Create a lot of new documents in collections
     // -------------------------
     static createMany(list, options = {}) {
         return (
             Promise.resolve()
-                // On filtre les données
+                // We avoid non authorizedFields
                 .then(() =>
                     list.map(m => this.filterFields(m, options.authorizedFields))
                 )
-                // On nettoie les données
+                // we avoid value: ['', null, 'null', undefined]
                 .then(filteredList => filteredList.map(this.cleanModelData.bind(this)))
-                // On vérifie les données
-                .then(cleanedList => cleanedList.map(this.checkData.bind(this)))
-                // Création du document
+                // We create the new document
                 .then(checkedList => this.getModel().insertMany(checkedList))
-        )
+        );
     }
     // -------------------------
-    // Nettoie les données passées en paramètre
+    // Clean data pass in param by removing
+    // example: {key: xxx, value: null}
     // -------------------------
     static cleanModelData(data) {
-        const result = {}
-        const emptyValues = ['', null, 'null', undefined]
-        const castValues = [
-            // Si on trouve un texte "true" ou
-            // "false", on le cast en Boolean
-            [/true|false/i, value => value === 'true'],
-        ]
+        const result = {};
+        const emptyValues = ['', null, 'null', undefined];
         Object.keys(data).forEach(key => {
-            // On exclue les valeurs vides
-            if (emptyValues.includes(data[key])) return
-            // On gère les chaines de caractères dans la recherche
-            if (typeof data[key] === 'string') {
-                // On transforme les données qui en ont besoin
-                castValues.find(regs => {
-                    // On récupère le cast
-                    const cast = regs.pop()
-                    // On parcours chaque regex pour voir si il y en a une qui match
-                    const reg = regs.find(r => r.test(data[key]))
-                    if (reg) {
-                        // On a trouvé une correspondance, on cast
-                        data[key] = cast(data[key].trim())
-                        // On s'arrête là
-                        return true
-                    }
-                    return false
-                })
-            }
-            // On sauvegarde les données dans l'objet
-            result[key] = data[key]
+            // We avoid null value to render
+            if (emptyValues.includes(data[key])) return;
+            // We save the data into the result Array
+            result[key] = data[key];
         });
 
-        return result
+        return result;
     }
     // -------------------------
-    // Filtre un objet de données pour
-    // ne garder que les champs listés
+    // Use a filter that as been declare in the object with authorizedFields
+    // and only save data that's in it
     // -------------------------
     static filterFields(data, fields) {
-        if (!fields) return data
-        const isRemoveMode = fields.find(f => f.startsWith('-'))
-        // On construit un nouvel objet qui ne
-        // va contenir que les données finale
-        let filteredFields = {}
-        if (isRemoveMode) {
-            filteredFields = data
-            fields = fields.map(f => f.replace(/^\-/i, ''))
-        }
-        // On parcours les champs autorisés
+        if (!fields) return data;
+        // We create the filtered Element
+        let filteredFields = {};
+        // We only save fields value
         fields.forEach(key => {
-            if (isRemoveMode) delete filteredFields[key]
-            else if (data[key] !== undefined) filteredFields[key] = data[key]
-        })
-        return filteredFields
+            if (data[key] !== undefined) filteredFields[key] = data[key];
+        });
+        return filteredFields;
     }
     // -------------------------
-    // Transforme une chaine de caractères
-    // comportant des séparateurs en tableau
-    // -------------------------
-    static splitString(value, sep, cast = String) {
-        if (typeof value === 'number') return [value]
-        if (value.indexOf(sep) >= 0) {
-            // Il y a plusieurs valeurs, on les transforme en tableau
-            return value.split(sep).map(val => cast(val.trim()))
-        }
-        return [value]
-    }
-    // -------------------------
-    // Retourne le model mongoose associé
+    // Return the model from mongoose with a string that's as been load in memory of mongoose
     // -------------------------
     static getModel() {
-        return mongoose.model(this.prototype.modelName)
+        return mongoose.model(this.prototype.modelName);
     }
 }
 
-// Nom du model associé au service
+// Model Name of the controller
 Core.prototype.modelName = 'Default';
 module.exports = Core;

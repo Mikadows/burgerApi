@@ -28,7 +28,7 @@ class OrderDao {
     }
 
     /**
-     * @returns {Promise<Order[]>}
+     * @returns {Promise<Menu[]>}
      */
     static async getAllOrders() {
         return Order.find();
