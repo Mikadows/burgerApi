@@ -8,5 +8,5 @@ const app = express();
 initDbConnection();
 routes(app);
 
-const API_PORT = process.env.API_PORT || 3000;
-app.listen(process.env.API_PORT, () => console.log(`BurgerAPI Started on port ${API_PORT}...`));
+const API_PORT =  process.env.PORT || process.env.API_PORT;
+app.listen(API_PORT, () => console.log(`BurgerAPI Started on port ${API_PORT}...`));
