@@ -1,4 +1,3 @@
-let OrderModel = require('../models').Order;
 let ProductModel = require('../models').Product;
 let MenuModel = require('../models').Menu;
 let SessionModel = require('../models').Session;
@@ -7,8 +6,6 @@ let CoreController = require('./core.controller');
 let ProductController = require('./product.controller');
 let MenuController = require('./menu.controller');
 let UserController = require('./user.controller');
-
-let AuthMiddleware = require('../middlewares').AuthMiddleware;
 
 let OrderDao = require('../dao').OrderDAO;
 let PromotionDao = require('../dao').PromotionDAO;
@@ -119,7 +116,7 @@ class OrderController extends CoreController {
             .then(async () =>  {
                 return OrderDao.getAllOrders()
             })
-            .then(orders => OrderController.read(orders, { fields }))
+            .then(orders => OrderController.read(orders, { fields },true))
             .then(orders => {
                 const response = {
                     count: orders.length,
@@ -128,7 +125,8 @@ class OrderController extends CoreController {
                             orders,
                             request: {
                                 type: 'GET',
-                                url: `${process.env.SERV_ADDRESS}/menu/${orders._id}`
+                                headers:{ "x-access-token": "YourToken" },
+                                url: `${process.env.SERV_ADDRESS}/preparer/order/${orders._id}`
                             }
                         };
                     })
@@ -155,26 +153,33 @@ class OrderController extends CoreController {
     //TODO : function to link
     static async get_order_by_id(req,res,next) {
         const id = req.params.orderId;
-        OrderController.orderNotExist(req,res,next,id);
-        OrderModel
-            .findById(id)
-            .select('name price products _id')
-            .exec()
-            .then(doc => {
-                if(doc){
-                    res.status(200).json({
-                        order: doc,
-                        request: {
-                            type: 'GET',
-                            url: `${process.env.SERV_ADDRESS}/orders`,
-                        }
-                    });
-                }
-            }).catch(err => {
-            res.status(400).json({
-                message: "Bad request",
+        await OrderController.orderNotExist(req,res,next,id);
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products',
+            'menus',
+            'totalPrice'
+        ];
+
+        Promise.resolve()
+            .then(() => OrderDao.findById(id))
+            .then(order => OrderController.read(order, { fields }))
+            .then(order => {
+                return res.json({
+                    order,
+                    request: {
+                        type: 'GET',
+                        headers:{ "x-access-token": "YourToken" },
+                        url: `${process.env.SERV_ADDRESS}/preparer/order/${order._id}`
+                    }
+                })}
+            ).catch(err => {
+            res.status(500).json({
+                message: "Internal Server Error",
                 err,
-            });
+            })
         });
     };
 
@@ -234,7 +239,8 @@ class OrderController extends CoreController {
                             order,
                             request: {
                                 type: 'GET',
-                                url: `${process.env.SERV_ADDRESS}/orders/${order._id}`
+                                headers:{ "x-access-token": "YourToken" },
+                                url: `${process.env.SERV_ADDRESS}/preparer/order/${order._id}`
                             }
                         };
                     })
@@ -263,6 +269,7 @@ class OrderController extends CoreController {
         return Promise.resolve()
             .then(() => OrderDao.findById(id))
             .then(order =>{
+                console.log(id);
                 if(!order){
                     res.status(404).json({
                         message: "This order doesn't exist"

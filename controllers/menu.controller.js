@@ -126,7 +126,7 @@ class MenuController extends CoreController {
 
         Promise.resolve()
             .then(() => MenuDao.getAllMenus())
-            .then(menus => MenuController.read(menus, { fields }))
+            .then(menus => MenuController.read(menus, { fields },true))
             .then(menus => {
                 const response = {
                     count: menus.length,
