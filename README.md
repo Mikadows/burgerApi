@@ -34,3 +34,8 @@ Finally you can start the API :
 ```shell script
 npm start
 ```
+
+
+Documentation : https://documenter.getpostman.com/view/6952777/SzmmUEYY
+
+Online API : https://arcane-garden-64428.herokuapp.com/
