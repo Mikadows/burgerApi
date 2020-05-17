@@ -90,13 +90,12 @@ class Core {
     // Return the render of a documents
     // id can be a document or an ID
     // -------------------------
-    static read(id, options = {}) {
+    static read(id, options = {}, getEnough) {
         return Promise.resolve()
             .then(() =>
                 {
-                    // We read all the Collection
-                    if(typeof id === 'object' && id.length > 1) {
-                        return this.getModel().find();
+                    if(getEnough){
+                        return id
                     }
                     // Only read One document
                     return typeof id === 'object'

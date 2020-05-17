@@ -8,6 +8,8 @@ let ProductController = require('./product.controller');
 let MenuController = require('./menu.controller');
 let UserController = require('./user.controller');
 
+let AuthMiddleware = require('../middlewares').AuthMiddleware;
+
 let OrderDao = require('../dao').OrderDAO;
 let PromotionDao = require('../dao').PromotionDAO;
 let SessionDao = require('../dao').SessionDAO;
@@ -23,8 +25,19 @@ class OrderController extends CoreController {
      */
     static render(list,options = {}){
         const populates = [
-            {path:'products'},
-            {path:'menus'}
+            {path:'products',
+                select: 'name price'
+
+            },
+            {path:'menus',
+            select: 'products name price',
+                populate: {
+                    path: 'products',
+                    model: 'Product',
+                    select:'name price'
+                }
+            },
+
         ];
         return super.render(list, { ...options,populates});
     }
@@ -91,42 +104,44 @@ class OrderController extends CoreController {
      * @returns {Promise<void>}
      */
     static async orders_get_all(req, res, next) {
-        OrderModel
-            .find()
-            .populate({
-            path: 'menus',
-            model: 'Menu',
-            populate: {
-                path: 'products',
-                model: 'Product'
-                }
+        const fields = [
+            '_id',
+            'products',
+            'menus',
+            'user',
+            'quantity',
+            'name',
+            'price',
+            'totalPrice'
+        ];
+
+        Promise.resolve()
+            .then(async () =>  {
+                return OrderDao.getAllOrders()
             })
-            .populate('products')
-            .select("totalPrice products menus _id")
-            .exec()
-            .then(docs => {
+            .then(orders => OrderController.read(orders, { fields }))
+            .then(orders => {
                 const response = {
-                    count: docs.length,
-                    orders: docs.map(doc => {
+                    count: orders.length,
+                    menus: orders.map(orders => {
                         return {
-                            totalPrice: doc.totalPrice,
-                            products: doc.products,
-                            menus: doc.menus,
-                            _id: doc._id,
+                            orders,
                             request: {
                                 type: 'GET',
-                                url: `${process.env.SERV_ADDRESS}/order/${doc._id}`
+                                url: `${process.env.SERV_ADDRESS}/menu/${orders._id}`
                             }
                         };
                     })
                 };
+                if(response.count === 0){
+                    res.status(204).end();
+                }
                 res.status(200).json(response);
-
-            }).catch(err =>{
+            }).catch(err => {
             res.status(400).json({
                 message: "Bad request",
                 err,
-            });
+            })
         });
     };
 
@@ -173,24 +188,53 @@ class OrderController extends CoreController {
     static async get_order_by_user_id(req,res,next) {
         const id = req.params.userId;
         await UserController.userNotExist(req, res, next, id);
+        let idToken = req.headers['x-access-token'] || false;
+
+        // check if the session is a valid token
+        if(!await SessionDao.tokenIsValid(idToken)) {
+            res.status(401).json({
+                status: 401,
+                message:"Your Session is not active anymore or doesn't exist, Unauthorized"
+            }).end();
+            throw new Error("Your Session is not active anymore or doesn't exist, Unauthorized");
+        }
+        let valid = null;
+        let SessionUser = await SessionModel.findOne({token: idToken}).exec();
+        // check if this user is a preparerOrAdmin
+        if(await SessionDao.userIsPreparerOrAdmin(idToken)) valid = true;
+
+        if(!valid) {
+            // Cast id and SessionUser.user into string
+            if(''+id !== ''+SessionUser.user) {
+                res.status(401).json({
+                    status: 401,
+                    message:"You cannot see Orders of other user if you are not admin or preparer"
+                }).end();
+                throw new Error("You cannot see Orders of other user if you are not admin or preparer");
+            }
+        }
         const fields = [
             '_id',
             'name',
             'price',
-            'products'
+            'products',
+            'menus',
+            'totalPrice'
         ];
-        Promise.resolve()
-            .then(() => OrderDao.find({}))
-            .then(menus => MenuController.read(menus, { fields }))
-            .then(menus => {
+
+        // Render the result
+        return Promise.resolve()
+            .then(() =>  OrderDao.find({user: id}))
+            .then(orders => OrderController.read(orders, { fields }, true))
+            .then(orders => {
                 const response = {
-                    count: menus.length,
-                    menus: menus.map(menu => {
+                    count: orders.length,
+                    menus: orders.map(order => {
                         return {
-                            menu,
+                            order,
                             request: {
                                 type: 'GET',
-                                url: `${process.env.SERV_ADDRESS}/menu/${menu._id}`
+                                url: `${process.env.SERV_ADDRESS}/orders/${order._id}`
                             }
                         };
                     })
