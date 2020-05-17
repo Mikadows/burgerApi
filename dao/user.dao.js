@@ -1,6 +1,6 @@
 'use strict';
 const User = require('../models').User;
-
+let mongoose = require('mongoose');
 class UserDao {
 
     /**
@@ -30,7 +30,8 @@ class UserDao {
      * @returns {Promise<User|undefined>}
      */
     static async findById(id) {
-        return User.findOne({_id: id}).populate('sessions');
+        if(mongoose.Types.ObjectId.isValid(id)) return User.findOne({_id: id}).populate('sessions');
+        else undefined;
     }
 
     /**

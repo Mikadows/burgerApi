@@ -1,11 +1,16 @@
 let OrderModel = require('../models').Order;
 let ProductModel = require('../models').Product;
 let MenuModel = require('../models').Menu;
+let SessionModel = require('../models').Session;
+
 let CoreController = require('./core.controller');
 let ProductController = require('./product.controller');
 let MenuController = require('./menu.controller');
+let UserController = require('./user.controller');
+
 let OrderDao = require('../dao').OrderDAO;
 let PromotionDao = require('../dao').PromotionDAO;
+let SessionDao = require('../dao').SessionDAO;
 let mongoose = require('mongoose');
 
 class OrderController extends CoreController {
@@ -33,7 +38,20 @@ class OrderController extends CoreController {
      */
     static async create_order(req, res, next) {
         let data = req.body;
-        const authorizedFields = ['products','menus', 'totalPrice'];
+        let idToken = req.headers['x-access-token'] || false;
+
+        if(!await SessionDao.tokenIsValid(idToken)) {
+            res.status(401).json({
+                status: 401,
+                message:"Your Session is not active anymore or doesn't exist, Unauthorized"
+            }).end();
+            throw new Error("Your Session is not active anymore or doesn't exist, Unauthorized");
+        }
+
+        let SessionUser = await SessionModel.findOne({token: idToken}).exec();
+        data.user = SessionUser.user;
+
+        const authorizedFields = ['products','menus', 'totalPrice','user'];
         Promise.resolve()
             .then(() => {
                 const promiseAll = [];
@@ -152,29 +170,40 @@ class OrderController extends CoreController {
      * @param next
      * @returns {Promise<void>}
      */
-    //TODO : function to create
     static async get_order_by_user_id(req,res,next) {
-        const id = req.params.orderId;
-        OrderController.orderNotExist(req,res,next,id);
-        OrderModel
-            .findById(id)
-            .select('name price products _id')
-            .exec()
-            .then(doc => {
-                if(doc){
-                    res.status(200).json({
-                        order: doc,
-                        request: {
-                            type: 'GET',
-                            url: `${process.env.SERV_ADDRESS}/orders`,
-                        }
-                    });
+        const id = req.params.userId;
+        await UserController.userNotExist(req, res, next, id);
+        const fields = [
+            '_id',
+            'name',
+            'price',
+            'products'
+        ];
+        Promise.resolve()
+            .then(() => OrderDao.find({}))
+            .then(menus => MenuController.read(menus, { fields }))
+            .then(menus => {
+                const response = {
+                    count: menus.length,
+                    menus: menus.map(menu => {
+                        return {
+                            menu,
+                            request: {
+                                type: 'GET',
+                                url: `${process.env.SERV_ADDRESS}/menu/${menu._id}`
+                            }
+                        };
+                    })
+                };
+                if(response.count === 0){
+                    res.status(204).end();
                 }
+                res.status(200).json(response);
             }).catch(err => {
             res.status(400).json({
                 message: "Bad request",
                 err,
-            });
+            })
         });
     };
 

@@ -70,6 +70,27 @@ class UserController extends CoreController{
     }
 
     /**
+     * Check if User exist
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<User>}
+     */
+    static userNotExist(req, res, next, id){
+        return Promise.resolve().then(() => UserDao.findById(id))
+            .then(user =>{
+                if(!user){
+                    res.status(404).json({
+                        message: `The user ${id} doesn't exist`
+                    }).end();
+                    throw new Error(`The user ${id} doesn't exist`);
+                }
+                return user;
+            });
+    }
+
+    /**
      * Close the session
      * @param req
      * @param res
