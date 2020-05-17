@@ -31,14 +31,23 @@ class ProductController extends CoreController {
             return ProductDao.findOne({name:req.body.name});
          })
              .then(product => {
-             if(product){
-                 res.status(409).json({
-                     message:"This product already exist"
-                 }).end();
-                 throw new Error("This product already exist");
-             }
-             return ProductController.create(data, {authorizedFields});
-         })
+                 if(product){
+                     res.status(409).json({
+                         message:"This product already exist"
+                     }).end();
+                     throw new Error("This product already exist");
+                 }
+                 authorizedFields.map(value =>{
+                     if(typeof data[value] == 'undefined') {
+                         res.status(409).json({
+                             message:`The value here: [${authorizedFields}] have to be put in your body`
+                         }).end();
+                         throw new Error(`The value here: [${authorizedFields}] have to be put in your body`);
+                     }
+                 })
+
+             })
+             .then(() => ProductController.create(data, {authorizedFields}))
              .then(product => ProductController.render(product))
              .then(product => res.status(201).json(product))
              .catch(next);
