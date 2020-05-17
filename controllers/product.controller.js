@@ -4,6 +4,12 @@ let CoreController = require('./core.controller');
 
 class ProductController extends CoreController {
 
+    /**
+     * Render and populate the model
+     * @param list
+     * @param options
+     * @returns {Promise<*>}
+     */
     static render(list,options = {}){
         const populates = [
             {path:'products'}
@@ -11,6 +17,13 @@ class ProductController extends CoreController {
         return super.render(list, { ...options,populates});
     }
 
+    /**
+     * Create a noun existing product
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
      static async create_product(req, res, next){
          let data = req.body;
          const authorizedFields = ['name','price'];
@@ -31,6 +44,13 @@ class ProductController extends CoreController {
              .catch(next);
      };
 
+    /**
+     * Get all the products in database
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async products_get_all(req, res, next) {
         ProductModel
             .find()
@@ -61,6 +81,13 @@ class ProductController extends CoreController {
         });
     };
 
+    /**
+     * Get the product by its id
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async get_product_by_id(req,res,next) {
         const id = req.params.productId;
         ProductController.productNotExist(req,res,next,id);
@@ -87,6 +114,13 @@ class ProductController extends CoreController {
         });
     };
 
+    /**
+     * Modify the product by its id
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async modif_product(req, res, next){
         const id = req.params.productId;
         let data = req.body;
@@ -109,6 +143,13 @@ class ProductController extends CoreController {
             .catch(next);
     }
 
+    /**
+     * Delete the product by its id if exist
+     * @param req
+     * @param res
+     * @param next
+     * @returns {Promise<void>}
+     */
     static async delete_product(req,res,next){
         const id = req.params.productId;
         Promise.resolve()
@@ -124,6 +165,14 @@ class ProductController extends CoreController {
             .catch(next);
     }
 
+    /**
+     * Check if the product exist or not
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<Product>}
+     */
     static async productNotExist(req,res,next,id){
         return Promise.resolve().then(() => ProductDao.findById(id))
             .then(product =>{
@@ -137,6 +186,14 @@ class ProductController extends CoreController {
             });
     }
 
+    /**
+     * Check if a product already exist with this name
+     * @param req
+     * @param res
+     * @param next
+     * @param id
+     * @returns {Promise<void>}
+     */
     static async productNameNotSameIdAlreadyExist(req,res,next,id) {
         Promise.resolve().then(() => ProductDao
             .find( {$and:[{"_id":{$ne:id}},{"name": {$eq:req.body.name}}]}

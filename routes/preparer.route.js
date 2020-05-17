@@ -1,6 +1,12 @@
 const bodyParser = require('body-parser');
+const AuthMiddleware = require('../middlewares/auth.middleware');
 
 module.exports = function(app) {
+
+    /**
+     * Apply the middleware for all routes bellow
+     */
+    app.use(AuthMiddleware.isPreparerOrAdmin)
 
     app.get('/preparer/orders', bodyParser.json(), async (req, res) => {
         //TODO : Get all orders

@@ -56,6 +56,12 @@ class SessionDao {
         else return false;
     }
 
+    /**
+     * Check if the the token belongs to an admin
+     * @param idToken
+     * @returns {Promise<boolean|*>}
+     * @constructor
+     */
     static async UserIsAdmin(idToken) {
         let SessionUser = await Session.findOne({token: idToken}).exec();
         if (SessionUser.user) {
@@ -64,7 +70,21 @@ class SessionDao {
             return TrueFalse;
         }
         return false;
+    }
 
+    /**
+     * Check if the token belongs to an admin or preparer
+     * @param idToken
+     * @returns {Promise<boolean|*>}
+     */
+    static async userIsPreparerOrAdmin(idToken) {
+        let SessionUser = await Session.findOne({token: idToken}).exec();
+        if (SessionUser.user) {
+
+            let TrueFalse = await UserDao.isPreparerOrAdmin(SessionUser.user);
+            return TrueFalse;
+        }
+        return false;
     }
 
     /**
